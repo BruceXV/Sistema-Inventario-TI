@@ -1,0 +1,21 @@
+INSERT INTO estados_equipo (nombre, descripcion) VALUES
+('Disponible', 'El equipo está disponible para ser asignado'),
+('Asignado', 'El equipo está actualmente asignado a un empleado'),
+('En reparación', 'El equipo se encuentra en reparación o mantenimiento'),
+('Dado de baja', 'El equipo se encuentra fuera de servicio');
+
+INSERT INTO tipos_equipo (nombre, descripcion) VALUES
+('Notebook', 'Computador portátil'),
+('Desktop', 'Computador de escritorio'),
+('Monitor', 'Monitor o pantalla'),
+('Impresora', 'Impresora de oficina'),
+('Celular', 'Teléfono móvil corporativo'),
+('Tablet', 'Tablet corporativa'),
+('Otro', 'Otro tipo de equipo tecnológico');
+
+INSERT INTO areas (nombre, descripcion) VALUES
+('TI', 'Área de tecnología e informática'),
+('Finanzas', 'Área encargada de procesos financieros'),
+('Recursos Humanos', 'Área encargada de gestión de personas'),
+('Administración', 'Área de gestión administrativa'),
+('Operaciones', 'Área encargada de procesos operativos');

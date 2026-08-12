@@ -1,0 +1,214 @@
+SISTEMA DE INVENTARIO TI
+
+Requisitos Funcionales y No Funcionales — Versión 1.0
+
+Documento de requisitos definidos para la primera versión del Sistema de
+Gestión de Inventario TI para empresas.
+
+============================================================ REQUISITOS
+FUNCIONALES (RF)
+============================================================
+
+RF-01. Inicio de sesión El sistema debe permitir que un administrador
+inicie sesión mediante correo y contraseña.
+
+RF-02. Validación de acceso El sistema debe impedir el acceso cuando las
+credenciales sean incorrectas o el administrador esté inactivo.
+
+RF-03. Cierre de sesión El sistema debe permitir al administrador cerrar
+su sesión de forma segura.
+
+RF-04. Dashboard El sistema debe mostrar un resumen del inventario,
+incluyendo cantidad total de equipos y equipos por estado.
+
+RF-05. Registrar equipos El administrador debe poder registrar nuevos
+equipos tecnológicos.
+
+RF-06. Listar equipos El sistema debe mostrar todos los equipos
+registrados.
+
+RF-07. Buscar equipos El administrador debe poder buscar equipos
+mediante datos como código interno, serial, marca o modelo.
+
+RF-08. Filtrar equipos El sistema debe permitir filtrar equipos por tipo
+y estado.
+
+RF-09. Editar equipos El administrador debe poder modificar información
+permitida de un equipo existente.
+
+RF-10. Consultar detalle de equipo El sistema debe mostrar información
+completa de un equipo y su historial.
+
+RF-11. Cambiar estado de equipo El sistema debe permitir modificar el
+estado de un equipo respetando las reglas de negocio.
+
+RF-12. Registrar tipos de equipo El administrador debe poder administrar
+los tipos de equipos disponibles en el sistema.
+
+RF-13. Registrar empleados El administrador debe poder registrar
+trabajadores de la empresa.
+
+RF-14. Listar empleados El sistema debe mostrar los empleados
+registrados.
+
+RF-15. Buscar empleados El administrador debe poder buscar empleados por
+nombre, RUT, correo u otros datos relevantes.
+
+RF-16. Editar empleados El administrador debe poder actualizar la
+información actual de un empleado.
+
+RF-17. Activar o desactivar empleados El administrador debe poder
+cambiar el estado de un empleado siguiendo las reglas definidas.
+
+RF-18. Reactivar empleados El sistema debe permitir reactivar un
+empleado previamente inactivo conservando su historial.
+
+RF-19. Administrar áreas El administrador debe poder registrar, editar y
+consultar las áreas de la empresa.
+
+RF-20. Asignar equipo El administrador debe poder asignar un equipo
+disponible a un empleado activo.
+
+RF-21. Asignar varios equipos El sistema debe permitir que un empleado
+tenga más de un equipo asignado simultáneamente.
+
+RF-22. Validar disponibilidad El sistema debe impedir asignar equipos
+que estén asignados, en reparación o dados de baja.
+
+RF-23. Confirmar asignación Antes de guardar una asignación, el sistema
+debe mostrar un resumen y solicitar confirmación.
+
+RF-24. Registrar devolución El administrador debe poder registrar la
+devolución de un equipo asignado.
+
+RF-25. Condición de devolución Durante la devolución, el administrador
+debe indicar la condición en que fue recibido el equipo.
+
+RF-26. Determinar estado posterior Después de una devolución, el equipo
+debe poder quedar Disponible o En reparación.
+
+RF-27. Confirmar devolución Antes de registrar una devolución, el
+sistema debe mostrar un resumen y solicitar confirmación.
+
+RF-28. Gestionar equipos en reparación El sistema debe permitir
+consultar los equipos actualmente En reparación.
+
+RF-29. Finalizar reparación El administrador debe poder marcar un equipo
+reparado como Disponible.
+
+RF-30. Dar de baja un equipo El administrador debe poder dar de baja un
+activo respetando las reglas de negocio.
+
+RF-31. Reactivar equipo dado de baja El administrador debe poder
+revertir una baja indicando el motivo correspondiente.
+
+RF-32. Consultar historial El administrador debe poder consultar las
+asignaciones y devoluciones históricas.
+
+RF-33. Historial por equipo El sistema debe permitir consultar todos los
+empleados que han tenido asignado un determinado equipo.
+
+RF-34. Historial por empleado El sistema debe permitir consultar todos
+los equipos que han sido asignados a un determinado empleado.
+
+RF-35. Filtrar historial El administrador debe poder filtrar registros
+históricos por empleado, equipo y fechas.
+
+RF-36. Proteger historial El sistema no debe permitir editar ni eliminar
+directamente asignaciones o devoluciones confirmadas.
+
+RF-37. Crear administradores Un administrador autenticado debe poder
+registrar nuevos administradores.
+
+RF-38. Gestionar administradores El sistema debe permitir consultar y
+cambiar el estado de otros administradores.
+
+RF-39. Validar fechas El sistema debe impedir fechas futuras en
+asignaciones y devoluciones.
+
+RF-40. Validar secuencia de fechas La fecha de devolución no puede ser
+anterior a la fecha de asignación.
+
+============================================================ REQUISITOS
+NO FUNCIONALES (RNF)
+============================================================
+
+RNF-01. Seguridad de contraseñas Las contraseñas deben almacenarse
+mediante un algoritmo seguro de hashing y nunca en texto plano.
+
+RNF-02. Autenticación Solo los usuarios autenticados deben poder acceder
+a las pantallas internas del sistema.
+
+RNF-03. Protección de rutas El backend debe impedir el acceso a
+funciones protegidas cuando no exista una sesión o token válido.
+
+RNF-04. Validación de datos Los datos enviados por el frontend deben
+validarse también en el backend.
+
+RNF-05. Integridad de datos La base de datos debe utilizar claves
+primarias, claves foráneas y restricciones necesarias para evitar
+registros inconsistentes.
+
+RNF-06. Trazabilidad Las operaciones históricas importantes deben
+conservarse para permitir conocer asignaciones y devoluciones
+anteriores.
+
+RNF-07. Usabilidad La interfaz debe ser clara y comprensible para un
+encargado de TI sin necesidad de conocimientos técnicos avanzados.
+
+RNF-08. Diseño responsive La interfaz debe adaptarse correctamente a
+distintos tamaños de pantalla de computador y tablet.
+
+RNF-09. Consistencia visual Botones, formularios, tablas, estados y
+mensajes deben mantener un estilo uniforme en toda la aplicación.
+
+RNF-10. Retroalimentación al usuario El sistema debe mostrar mensajes
+claros cuando una operación se complete correctamente o cuando ocurra un
+error.
+
+RNF-11. Confirmación de operaciones importantes Las acciones que afecten
+asignaciones, devoluciones, bajas o reactivaciones deben solicitar
+confirmación.
+
+RNF-12. Rendimiento Las operaciones habituales, como cargar listados,
+realizar búsquedas o registrar información, deben responder en un tiempo
+razonable bajo el volumen esperado de una PYME.
+
+RNF-13. Mantenibilidad El frontend, backend y acceso a datos deben
+mantenerse separados y organizados para facilitar futuras
+modificaciones.
+
+RNF-14. Escalabilidad funcional La arquitectura debe permitir agregar
+posteriormente módulos como reportes, fotografías, códigos QR,
+mantenimiento o múltiples empresas sin reconstruir completamente el
+sistema.
+
+RNF-15. Compatibilidad La aplicación web debe funcionar correctamente en
+navegadores modernos de escritorio.
+
+RNF-16. Manejo de errores Los errores internos del sistema no deben
+mostrar información técnica sensible al usuario final.
+
+RNF-17. Privacidad La aplicación solo debe mostrar información del
+inventario y de empleados a administradores autenticados.
+
+RNF-18. Código versionado El proyecto debe mantenerse bajo control de
+versiones con Git.
+
+RNF-19. Documentación El proyecto debe incluir documentación suficiente
+para comprender su propósito, instalación, arquitectura y principales
+funcionalidades.
+
+RNF-20. Datos de demostración La versión pública del portafolio debe
+utilizar datos ficticios y no información perteneciente a una empresa
+real.
+
+============================================================ RESUMEN
+============================================================
+
+Requisitos funcionales: 40 Requisitos no funcionales: 20
+
+Estado del documento: Requisitos iniciales definidos para la V1.0. Estos
+requisitos podrán ajustarse durante el diseño detallado si se detecta
+una necesidad que mejore la coherencia del producto, manteniendo
+documentados los cambios.

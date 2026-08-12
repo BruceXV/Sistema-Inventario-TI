@@ -1,0 +1,243 @@
+SISTEMA DE INVENTARIO TI
+
+Reglas de Negocio — Versión 1.0
+
+Documento de reglas de negocio definidas para la primera versión del
+Sistema de Gestión de Inventario TI para empresas.
+
+1. ACCESO Y ADMINISTRADORES
+
+RN-01. Solo los administradores pueden iniciar sesión y acceder al
+sistema.
+
+RN-02. Los empleados registrados en el inventario no tienen cuenta de
+acceso al sistema.
+
+RN-03. No existe registro público de administradores.
+
+RN-04. El primer administrador se crea mediante un proceso controlado al
+configurar inicialmente el sistema.
+
+RN-05. Un administrador autenticado puede crear otros administradores.
+
+RN-06. Las contraseñas nunca se almacenan en texto plano. Deben
+almacenarse mediante un hash seguro.
+
+RN-07. Un administrador inactivo no puede iniciar sesión.
+
+RN-08. Los administradores tienen acceso a las funciones de gestión de
+equipos, empleados, áreas, asignaciones, devoluciones, estados,
+historial y administración del sistema.
+
+2. EMPLEADOS Y ÁREAS
+
+RN-09. Cada empleado pertenece a un área de la empresa.
+
+RN-10. Un área puede tener múltiples empleados.
+
+RN-11. El área actual de un empleado puede modificarse si el trabajador
+cambia de departamento.
+
+RN-12. En la versión 1.0 no se guardará un historial de los cambios de
+área del empleado; solamente se conservará su área actual.
+
+RN-13. No pueden existir dos empleados registrados con el mismo RUT.
+
+RN-14. Un empleado activo puede recibir uno o varios equipos
+simultáneamente.
+
+RN-15. Un empleado inactivo no puede recibir nuevas asignaciones.
+
+RN-16. Un empleado que abandona la empresa debe quedar en estado
+Inactivo y no debe eliminarse si posee historial.
+
+RN-17. Si se intenta desactivar a un empleado que todavía tiene equipos
+asignados, primero deben registrarse las devoluciones correspondientes.
+
+RN-18. Una vez devueltos todos los equipos activos del empleado, este
+puede ser desactivado.
+
+RN-19. Si un antiguo empleado vuelve a trabajar en la empresa, se debe
+reactivar su registro existente en lugar de crear uno nuevo.
+
+RN-20. Al reactivar a un empleado se conserva todo su historial anterior
+de asignaciones y devoluciones.
+
+RN-21. Un área no debe desactivarse mientras tenga empleados activos
+asociados.
+
+3. EQUIPOS
+
+RN-22. El sistema administra activos tecnológicos pertenecientes o
+controlados por la empresa.
+
+RN-23. Los tipos iniciales de equipo de la versión 1.0 serán: Notebook,
+PC de escritorio, Monitor, Celular, Tablet e Impresora.
+
+RN-24. Los tipos de equipo se administran mediante un catálogo para
+permitir incorporar nuevos tipos posteriormente sin modificar la
+estructura principal del sistema.
+
+RN-25. Cada equipo debe tener un código interno único.
+
+RN-26. Un código interno no puede reutilizarse aunque el equipo original
+haya sido dado de baja.
+
+RN-27. El nombre, marca o modelo de diferentes equipos puede repetirse.
+
+RN-28. El número de serie será opcional porque algunos equipos pueden no
+tenerlo, haber perdido su etiqueta o no disponer de uno.
+
+RN-29. Cuando un equipo tenga número de serie registrado, este debe ser
+único para identificar correctamente la unidad física.
+
+RN-30. Un equipo sin número de serie seguirá siendo identificable
+mediante su código interno único.
+
+RN-31. Los campos que no correspondan a todos los tipos de equipo, como
+dirección MAC o dirección IP, podrán ser opcionales.
+
+RN-32. Los estados principales de los equipos serán: Disponible,
+Asignado, En reparación y Dado de baja.
+
+RN-33. Los equipos con historial no deben eliminarse físicamente de la
+base de datos.
+
+4. ASIGNACIONES
+
+RN-34. Solo un equipo en estado Disponible puede ser asignado.
+
+RN-35. Un equipo solo puede tener una asignación activa al mismo tiempo.
+
+RN-36. Un empleado puede tener varios equipos asignados simultáneamente.
+
+RN-37. No se puede asignar un equipo a un empleado Inactivo.
+
+RN-38. Un equipo En reparación no puede ser asignado.
+
+RN-39. Un equipo Dado de baja no puede ser asignado mientras permanezca
+en dicho estado.
+
+RN-40. Al confirmar una asignación, el estado del equipo cambia
+automáticamente de Disponible a Asignado.
+
+RN-41. Antes de guardar una asignación, el sistema debe mostrar una
+confirmación con los datos principales de la operación.
+
+RN-42. La fecha de asignación puede ser la fecha actual o una fecha
+pasada.
+
+RN-43. No se permiten fechas de asignación futuras.
+
+RN-44. Una asignación confirmada forma parte del historial y no puede
+editarse ni eliminarse directamente.
+
+5. DEVOLUCIONES
+
+RN-45. Un equipo Asignado no puede cambiar manualmente a Disponible.
+
+RN-46. Para liberar un equipo Asignado debe registrarse primero una
+devolución.
+
+RN-47. Cada asignación puede tener como máximo una devolución asociada.
+
+RN-48. Al registrar una devolución, el administrador debe indicar la
+condición en que se recibe el equipo.
+
+RN-49. Después de una devolución, el equipo puede quedar Disponible o
+pasar a En reparación dependiendo de su condición.
+
+RN-50. Antes de confirmar una devolución, el sistema debe mostrar un
+mensaje de confirmación con los datos principales.
+
+RN-51. La fecha de devolución nunca puede ser anterior a la fecha de
+asignación correspondiente.
+
+RN-52. La fecha de devolución puede ser la fecha actual o una fecha
+pasada válida.
+
+RN-53. No se permiten fechas de devolución futuras.
+
+RN-54. Una devolución confirmada forma parte del historial y no puede
+editarse ni eliminarse directamente.
+
+6. REPARACIONES
+
+RN-55. Un equipo En reparación no puede ser asignado a ningún empleado.
+
+RN-56. Cuando se confirme que un equipo fue reparado correctamente,
+puede cambiar de En reparación a Disponible.
+
+RN-57. Una vez Disponible, el equipo puede volver a ser asignado
+siguiendo las reglas normales de asignación.
+
+7. EQUIPOS DADOS DE BAJA
+
+RN-58. Un equipo puede ser marcado como Dado de baja cuando sea retirado
+del uso normal de la empresa.
+
+RN-59. Un equipo Dado de baja permanece almacenado en el sistema para
+conservar su historial.
+
+RN-60. Un equipo Dado de baja no puede recibir nuevas asignaciones.
+
+RN-61. Un administrador puede revertir la baja de un equipo si la baja
+fue realizada por error o existe una razón válida para reincorporarlo.
+
+RN-62. Para reactivar un equipo Dado de baja, el administrador debe
+confirmar expresamente la operación e indicar el motivo.
+
+RN-63. Después de una reactivación válida, el equipo puede volver al
+estado Disponible.
+
+8. HISTORIAL Y TRAZABILIDAD
+
+RN-64. El sistema debe conservar el historial de asignaciones y
+devoluciones de cada equipo.
+
+RN-65. El sistema debe permitir conocer qué empleados han tenido un
+equipo a lo largo del tiempo.
+
+RN-66. El sistema debe permitir conocer los equipos que han sido
+asignados a un empleado.
+
+RN-67. Los registros históricos confirmados no pueden modificarse ni
+eliminarse directamente.
+
+RN-68. Antes de registrar operaciones que afecten al historial, el
+administrador debe confirmar que la información ingresada es correcta.
+
+RN-69. Los cambios del estado actual de un equipo no deben destruir su
+historial anterior.
+
+RN-70. La regla general del sistema será conservar la trazabilidad: el
+estado actual puede cambiar, pero las asignaciones y devoluciones
+históricas deben permanecer registradas.
+
+9. REGLAS GENERALES DE INTEGRIDAD
+
+RN-71. El sistema debe impedir operaciones que generen estados
+contradictorios, como tener un equipo Disponible con una asignación
+activa.
+
+RN-72. Un equipo Asignado debe estar relacionado con una asignación
+activa.
+
+RN-73. Si una asignación tiene una devolución registrada, dicha
+asignación deja de considerarse activa.
+
+RN-74. Los cambios importantes, como asignar, devolver, dar de baja o
+reactivar un equipo, requieren confirmación del administrador antes de
+ejecutarse.
+
+RN-75. La información histórica no se corregirá sobrescribiendo
+registros anteriores. Si en una versión futura se implementan
+anulaciones o correcciones, deberán conservar evidencia de la operación
+original.
+
+------------------------------------------------------------------------
+
+Estado del documento: Reglas de negocio principales definidas para la
+V1.0. Los campos obligatorios y opcionales de cada formulario se
+definirán posteriormente durante el diseño detallado de las pantallas y
+del modelo de datos.

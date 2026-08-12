@@ -1,0 +1,99 @@
+CREATE TABLE areas (
+    id_area SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    descripcion VARCHAR(255),
+    estado BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE usuarios (
+    id_usuario SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    rol VARCHAR(30) NOT NULL DEFAULT 'ADMIN',
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    estado BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE tipos_equipo (
+    id_tipo SERIAL PRIMARY KEY,
+    nombre VARCHAR(80) NOT NULL UNIQUE,
+    descripcion VARCHAR(255),
+    estado BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE estados_equipo (
+    id_estado SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL UNIQUE,
+    descripcion VARCHAR(255),
+    estado BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE empleados (
+    id_empleado SERIAL PRIMARY KEY,
+    rut VARCHAR(12) NOT NULL UNIQUE,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    correo VARCHAR(150) NOT NULL UNIQUE,
+    telefono VARCHAR(20),
+    id_area INTEGER NOT NULL,
+    cargo VARCHAR(100),
+    fecha_ingreso DATE,
+    estado BOOLEAN NOT NULL DEFAULT TRUE,
+
+    CONSTRAINT fk_empleado_area
+        FOREIGN KEY (id_area)
+        REFERENCES areas(id_area)
+);
+
+CREATE TABLE equipos (
+    id_equipo SERIAL PRIMARY KEY,
+    codigo_interno VARCHAR(30) NOT NULL UNIQUE,
+    nombre VARCHAR(100) NOT NULL,
+    id_tipo INTEGER NOT NULL,
+    marca VARCHAR(80) NOT NULL,
+    modelo VARCHAR(100),
+    serial VARCHAR(100) UNIQUE,
+    mac_address VARCHAR(17),
+    ip_interna VARCHAR(45),
+    fecha_compra DATE,
+    id_estado INTEGER NOT NULL,
+    observaciones TEXT,
+    fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_equipo_tipo
+        FOREIGN KEY (id_tipo)
+        REFERENCES tipos_equipo(id_tipo),
+
+    CONSTRAINT fk_equipo_estado
+        FOREIGN KEY (id_estado)
+        REFERENCES estados_equipo(id_estado)
+);
+
+CREATE TABLE asignaciones (
+    id_asignacion SERIAL PRIMARY KEY,
+    id_equipo INTEGER NOT NULL,
+    id_empleado INTEGER NOT NULL,
+    fecha_asignacion TIMESTAMP NOT NULL,
+    observaciones TEXT,
+
+    CONSTRAINT fk_asignacion_equipo
+        FOREIGN KEY (id_equipo)
+        REFERENCES equipos(id_equipo),
+
+    CONSTRAINT fk_asignacion_empleado
+        FOREIGN KEY (id_empleado)
+        REFERENCES empleados(id_empleado)
+);
+
+CREATE TABLE devoluciones (
+    id_devolucion SERIAL PRIMARY KEY,
+    id_asignacion INTEGER NOT NULL UNIQUE,
+    fecha_devolucion TIMESTAMP NOT NULL,
+    condicion_devolucion VARCHAR(50) NOT NULL,
+    observaciones TEXT,
+
+    CONSTRAINT fk_devolucion_asignacion
+        FOREIGN KEY (id_asignacion)
+        REFERENCES asignaciones(id_asignacion)
+);
