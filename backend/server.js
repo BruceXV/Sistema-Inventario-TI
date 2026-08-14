@@ -2,22 +2,10 @@
 // IMPORTACIÓN DE LIBRERÍAS
 // ======================================================
 
-// Express nos permite crear el servidor y las rutas de nuestra API.
 const express = require('express');
-
-// CORS permite que nuestro frontend pueda comunicarse con el backend.
 const cors = require('cors');
-
-// bcrypt sirve para comparar contraseñas de forma segura.
-// Nunca compararemos ni guardaremos contraseñas como texto normal.
 const bcrypt = require('bcrypt');
-
-// jsonwebtoken nos permite crear un token cuando el usuario inicia sesión.
-// Ese token servirá después para demostrar que el administrador está autenticado.
 const jwt = require('jsonwebtoken');
-
-// dotenv carga las variables privadas guardadas en el archivo .env.
-// Ejemplo: contraseña de PostgreSQL y JWT_SECRET.
 require('dotenv').config();
 
 
@@ -25,43 +13,68 @@ require('dotenv').config();
 // CONEXIÓN CON POSTGRESQL
 // ======================================================
 
-// Importamos la conexión que configuramos anteriormente en db.js.
 const pool = require('./db');
 
 
 // ======================================================
-// CREACIÓN DEL SERVIDOR
+// CREAR APLICACIÓN EXPRESS
 // ======================================================
 
-// Creamos nuestra aplicación usando Express.
 const app = express();
 
 
 // ======================================================
-// MIDDLEWARES
+// MIDDLEWARES GENERALES
 // ======================================================
 
-// Permitimos que el frontend pueda realizar peticiones al backend.
 app.use(cors());
-
-// Permite que Express pueda recibir información en formato JSON.
-// Por ejemplo:
-//
-// {
-//     "correo": "admin@empresa.com",
-//     "password": "123456"
-// }
 app.use(express.json());
+
+
+// ======================================================
+// VERIFICAR TOKEN JWT
+// ======================================================
+
+function verificarToken(req, res, next) {
+
+    const authorization = req.headers.authorization;
+
+    if (
+        !authorization ||
+        !authorization.startsWith('Bearer ')
+    ) {
+        return res.status(401).json({
+            mensaje: 'Acceso no autorizado'
+        });
+    }
+
+    const token = authorization.split(' ')[1];
+
+    try {
+
+        const usuario = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+
+        req.usuario = usuario;
+
+        next();
+
+    } catch (error) {
+
+        return res.status(401).json({
+            mensaje: 'Token inválido o expirado'
+        });
+
+    }
+}
 
 
 // ======================================================
 // RUTA PRINCIPAL
 // ======================================================
 
-// Esta ruta sirve simplemente para comprobar
-// que nuestra API está funcionando.
-//
-// GET http://localhost:3000/
 app.get('/', (req, res) => {
 
     res.json({
@@ -72,23 +85,17 @@ app.get('/', (req, res) => {
 
 
 // ======================================================
-// PRUEBA DE CONEXIÓN CON POSTGRESQL
+// PRUEBA DE POSTGRESQL
 // ======================================================
 
-// Esta ruta comprueba que Node.js realmente
-// puede comunicarse con PostgreSQL.
-//
-// GET http://localhost:3000/api/test-db
 app.get('/api/test-db', async (req, res) => {
 
     try {
 
-        // Ejecutamos una consulta sencilla en PostgreSQL.
-        // SELECT NOW() devuelve la fecha y hora del servidor.
-        const resultado = await pool.query('SELECT NOW()');
+        const resultado = await pool.query(
+            'SELECT NOW()'
+        );
 
-        // Si PostgreSQL respondió correctamente,
-        // enviamos una respuesta exitosa.
         res.json({
             mensaje: 'Conexión con PostgreSQL exitosa',
             fechaServidor: resultado.rows[0].now
@@ -96,41 +103,34 @@ app.get('/api/test-db', async (req, res) => {
 
     } catch (error) {
 
-        // Si ocurre un error, lo mostramos en la terminal.
-        console.error(error);
+        console.error(
+            'Error de conexión con PostgreSQL:',
+            error
+        );
 
-        // También respondemos al cliente con código HTTP 500.
         res.status(500).json({
             mensaje: 'Error al conectar con PostgreSQL'
         });
-    }
 
+    }
 });
 
 
 // ======================================================
-// LOGIN DEL ADMINISTRADOR
+// LOGIN
 // ======================================================
 
-// Esta ruta recibirá el correo y contraseña
-// enviados desde nuestra futura pantalla de Login.
-//
-// POST http://localhost:3000/api/auth/login
 app.post('/api/auth/login', async (req, res) => {
 
     try {
 
-        // Extraemos correo y password del JSON
-        // enviado por el frontend.
         const { correo, password } = req.body;
 
 
         // --------------------------------------------------
-        // 1. VALIDAR CAMPOS OBLIGATORIOS
+        // VALIDAR CAMPOS
         // --------------------------------------------------
 
-        // Si falta el correo o la contraseña,
-        // no dejamos continuar.
         if (!correo || !password) {
 
             return res.status(400).json({
@@ -141,14 +141,9 @@ app.post('/api/auth/login', async (req, res) => {
 
 
         // --------------------------------------------------
-        // 2. BUSCAR AL USUARIO EN POSTGRESQL
+        // BUSCAR USUARIO
         // --------------------------------------------------
 
-        // Buscamos un usuario cuyo correo coincida
-        // con el correo ingresado en el Login.
-        //
-        // $1 es un parámetro de PostgreSQL.
-        // Usarlo así también ayuda a evitar SQL Injection.
         const resultado = await pool.query(
             `SELECT
                 id_usuario,
@@ -164,11 +159,9 @@ app.post('/api/auth/login', async (req, res) => {
 
 
         // --------------------------------------------------
-        // 3. COMPROBAR SI EL USUARIO EXISTE
+        // USUARIO NO EXISTE
         // --------------------------------------------------
 
-        // Si PostgreSQL no encontró ninguna fila,
-        // significa que ese correo no existe.
         if (resultado.rows.length === 0) {
 
             return res.status(401).json({
@@ -178,18 +171,13 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
 
-        // Guardamos los datos encontrados en una variable.
         const usuario = resultado.rows[0];
 
 
         // --------------------------------------------------
-        // 4. COMPROBAR SI EL USUARIO ESTÁ ACTIVO
+        // USUARIO INACTIVO
         // --------------------------------------------------
 
-        // Nuestra tabla usuarios tiene el campo "estado".
-        //
-        // true  = usuario activo
-        // false = usuario desactivado
         if (!usuario.estado) {
 
             return res.status(403).json({
@@ -200,27 +188,15 @@ app.post('/api/auth/login', async (req, res) => {
 
 
         // --------------------------------------------------
-        // 5. COMPROBAR LA CONTRASEÑA
+        // COMPARAR CONTRASEÑA
         // --------------------------------------------------
 
-        // La contraseña NO está guardada directamente
-        // en PostgreSQL.
-        //
-        // PostgreSQL guarda password_hash.
-        //
-        // bcrypt.compare compara:
-        //
-        // contraseña ingresada
-        //        VS
-        // hash guardado en PostgreSQL
         const passwordCorrecta = await bcrypt.compare(
             password,
             usuario.password_hash
         );
 
 
-        // Si la contraseña no coincide,
-        // rechazamos el inicio de sesión.
         if (!passwordCorrecta) {
 
             return res.status(401).json({
@@ -231,49 +207,31 @@ app.post('/api/auth/login', async (req, res) => {
 
 
         // --------------------------------------------------
-        // 6. CREAR TOKEN DE AUTENTICACIÓN
+        // CREAR JWT
         // --------------------------------------------------
 
-        // Si llegamos hasta aquí significa:
-        //
-        // ✓ El correo existe
-        // ✓ El usuario está activo
-        // ✓ La contraseña es correcta
-        //
-        // Ahora generamos un JWT.
         const token = jwt.sign(
-
-            // Información que guardaremos dentro del token.
             {
                 id_usuario: usuario.id_usuario,
                 correo: usuario.correo,
                 rol: usuario.rol
             },
-
-            // Clave secreta guardada en nuestro archivo .env.
             process.env.JWT_SECRET,
-
-            // El token tendrá una duración máxima de 8 horas.
             {
                 expiresIn: '8h'
             }
-
         );
 
 
         // --------------------------------------------------
-        // 7. LOGIN EXITOSO
+        // RESPUESTA
         // --------------------------------------------------
 
-        // Finalmente respondemos al frontend.
-        //
-        // Importante:
-        // NO enviamos password_hash.
         res.json({
 
             mensaje: 'Inicio de sesión exitoso',
 
-            token: token,
+            token,
 
             usuario: {
                 id_usuario: usuario.id_usuario,
@@ -284,20 +242,786 @@ app.post('/api/auth/login', async (req, res) => {
 
         });
 
-
     } catch (error) {
 
-        // --------------------------------------------------
-        // ERROR INESPERADO
-        // --------------------------------------------------
-
-        // Si ocurre un problema inesperado con Node,
-        // PostgreSQL, bcrypt, etc., llegará aquí.
-        console.error('Error en login:', error);
+        console.error(
+            'Error en login:',
+            error
+        );
 
         res.status(500).json({
             mensaje: 'Error interno del servidor'
         });
+
+    }
+});
+
+
+// ======================================================
+// OBTENER TIPOS DE EQUIPO
+// ======================================================
+
+app.get('/api/tipos-equipo', async (req, res) => {
+
+    try {
+
+        const resultado = await pool.query(
+            `SELECT
+                id_tipo,
+                nombre
+             FROM tipos_equipo
+             WHERE estado = TRUE
+             ORDER BY nombre ASC`
+        );
+
+        res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener tipos de equipo:',
+            error
+        );
+
+        res.status(500).json({
+            mensaje: 'Error al obtener los tipos de equipo'
+        });
+
+    }
+});
+
+
+// ======================================================
+// OBTENER ESTADOS DE EQUIPO
+// ======================================================
+
+app.get('/api/estados-equipo', async (req, res) => {
+
+    try {
+
+        const resultado = await pool.query(
+            `SELECT
+                id_estado,
+                nombre
+             FROM estados_equipo
+             WHERE estado = TRUE
+             ORDER BY id_estado ASC`
+        );
+
+        res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener estados de equipo:',
+            error
+        );
+
+        res.status(500).json({
+            mensaje: 'Error al obtener los estados de equipo'
+        });
+
+    }
+});
+
+
+// ======================================================
+// REGISTRAR EQUIPO
+// ======================================================
+
+app.post('/api/equipos', verificarToken, async (req, res) => {
+
+    let cliente;
+
+    try {
+
+        // --------------------------------------------------
+        // RECIBIR DATOS
+        // --------------------------------------------------
+
+        let {
+            codigo_interno,
+            nombre,
+            id_tipo,
+            tipo_personalizado,
+            marca,
+            modelo,
+            serial,
+            mac_address,
+            ip_interna,
+            fecha_compra,
+            id_estado,
+            observaciones
+        } = req.body;
+
+
+        // ==================================================
+        // NORMALIZAR DATOS
+        // ==================================================
+
+        codigo_interno =
+            typeof codigo_interno === 'string'
+                ? codigo_interno.trim()
+                : '';
+
+        nombre =
+            typeof nombre === 'string'
+                ? nombre.trim()
+                : '';
+
+        marca =
+            typeof marca === 'string'
+                ? marca.trim()
+                : '';
+
+        tipo_personalizado =
+            typeof tipo_personalizado === 'string'
+                ? tipo_personalizado.trim()
+                : null;
+
+        modelo =
+            typeof modelo === 'string' &&
+            modelo.trim()
+                ? modelo.trim()
+                : null;
+
+        serial =
+            typeof serial === 'string' &&
+            serial.trim()
+                ? serial.trim()
+                : null;
+
+        mac_address =
+            typeof mac_address === 'string' &&
+            mac_address.trim()
+                ? mac_address.trim()
+                : null;
+
+        ip_interna =
+            typeof ip_interna === 'string' &&
+            ip_interna.trim()
+                ? ip_interna.trim()
+                : null;
+
+        fecha_compra =
+            typeof fecha_compra === 'string' &&
+            fecha_compra.trim()
+                ? fecha_compra.trim()
+                : null;
+
+        observaciones =
+            typeof observaciones === 'string'
+                ? observaciones.trim()
+                : '';
+
+
+        const idTipoNumero = Number(id_tipo);
+        const idEstadoNumero = Number(id_estado);
+
+
+        // ==================================================
+        // CAMPOS OBLIGATORIOS
+        // ==================================================
+
+        if (
+            !codigo_interno ||
+            !nombre ||
+            !marca ||
+            !fecha_compra ||
+            !observaciones ||
+            !Number.isInteger(idTipoNumero) ||
+            !Number.isInteger(idEstadoNumero)
+        ) {
+
+            return res.status(400).json({
+                mensaje: 'Faltan campos obligatorios'
+            });
+
+        }
+
+
+        // ==================================================
+        // CÓDIGO INTERNO
+        // ==================================================
+
+        const codigoRegex =
+            /^[A-Za-z0-9_-]{2,30}$/;
+
+        if (!codigoRegex.test(codigo_interno)) {
+
+            return res.status(400).json({
+                mensaje: 'Código interno inválido'
+            });
+
+        }
+
+
+        // ==================================================
+        // NOMBRE
+        // ==================================================
+
+        if (
+            nombre.length < 2 ||
+            nombre.length > 100
+        ) {
+
+            return res.status(400).json({
+                mensaje: 'Nombre del equipo inválido'
+            });
+
+        }
+
+
+        // ==================================================
+        // MARCA
+        // ==================================================
+
+        if (
+            marca.length < 2 ||
+            marca.length > 80
+        ) {
+
+            return res.status(400).json({
+                mensaje: 'Marca inválida'
+            });
+
+        }
+
+
+        // ==================================================
+        // MODELO
+        // ==================================================
+
+        if (
+            modelo &&
+            modelo.length > 100
+        ) {
+
+            return res.status(400).json({
+                mensaje: 'Modelo inválido'
+            });
+
+        }
+
+
+        // ==================================================
+        // SERIAL
+        // ==================================================
+
+        if (
+            serial &&
+            serial.length > 100
+        ) {
+
+            return res.status(400).json({
+                mensaje: 'Número de serie inválido'
+            });
+
+        }
+
+
+        // ==================================================
+        // MAC ADDRESS
+        // ==================================================
+
+        if (mac_address) {
+
+            const macRegex =
+                /^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$/;
+
+            if (!macRegex.test(mac_address)) {
+
+                return res.status(400).json({
+                    mensaje: 'Dirección MAC inválida'
+                });
+
+            }
+
+        }
+
+
+        // ==================================================
+        // IPv4
+        // ==================================================
+
+        if (ip_interna) {
+
+            const partes = ip_interna.split('.');
+
+            const ipValida =
+                partes.length === 4 &&
+                partes.every((parte) => {
+
+                    if (!/^\d{1,3}$/.test(parte)) {
+                        return false;
+                    }
+
+                    const numero = Number(parte);
+
+                    return (
+                        numero >= 0 &&
+                        numero <= 255
+                    );
+
+                });
+
+
+            if (!ipValida) {
+
+                return res.status(400).json({
+                    mensaje: 'Dirección IPv4 inválida'
+                });
+
+            }
+
+        }
+
+
+        // ==================================================
+        // FECHA DE COMPRA OBLIGATORIA
+        // ==================================================
+
+        const fechaCompra =
+            new Date(
+                `${fecha_compra}T00:00:00`
+            );
+
+        const hoy = new Date();
+
+        hoy.setHours(
+            23,
+            59,
+            59,
+            999
+        );
+
+
+        if (
+            Number.isNaN(fechaCompra.getTime()) ||
+            fechaCompra > hoy
+        ) {
+
+            return res.status(400).json({
+                mensaje:
+                    'La fecha de compra no puede ser futura'
+            });
+
+        }
+
+
+        // ==================================================
+        // OBSERVACIONES OBLIGATORIAS
+        // ==================================================
+
+        if (
+            observaciones.length < 5 ||
+            observaciones.length > 500
+        ) {
+
+            return res.status(400).json({
+                mensaje:
+                    'Las observaciones deben tener entre 5 y 500 caracteres'
+            });
+
+        }
+
+
+        // ==================================================
+        // INICIAR TRANSACCIÓN
+        // ==================================================
+
+        cliente = await pool.connect();
+
+        await cliente.query('BEGIN');
+
+
+        // ==================================================
+        // COMPROBAR TIPO SELECCIONADO
+        // ==================================================
+
+        const tipoResultado =
+            await cliente.query(
+                `SELECT
+                    id_tipo,
+                    nombre,
+                    estado
+                 FROM tipos_equipo
+                 WHERE id_tipo = $1
+                   AND estado = TRUE`,
+                [idTipoNumero]
+            );
+
+
+        if (
+            tipoResultado.rows.length === 0
+        ) {
+
+            await cliente.query('ROLLBACK');
+
+            return res.status(400).json({
+                mensaje: 'Tipo de equipo inválido'
+            });
+
+        }
+
+
+        const tipoSeleccionado =
+            tipoResultado.rows[0];
+
+
+        let idTipoFinal =
+            tipoSeleccionado.id_tipo;
+
+
+        // ==================================================
+        // TIPO = "OTRO"
+        // ==================================================
+
+        if (
+            tipoSeleccionado.nombre
+                .trim()
+                .toLowerCase() === 'otro'
+        ) {
+
+            // ----------------------------------------------
+            // VALIDAR TIPO PERSONALIZADO
+            // ----------------------------------------------
+
+            if (
+                !tipo_personalizado ||
+                tipo_personalizado.length < 2 ||
+                tipo_personalizado.length > 80
+            ) {
+
+                await cliente.query('ROLLBACK');
+
+                return res.status(400).json({
+                    mensaje:
+                        'Ingresa un tipo de equipo válido'
+                });
+
+            }
+
+
+            // ----------------------------------------------
+            // NO PERMITIR "OTRO" COMO TEXTO PERSONALIZADO
+            // ----------------------------------------------
+
+            if (
+                tipo_personalizado
+                    .toLowerCase() === 'otro'
+            ) {
+
+                await cliente.query('ROLLBACK');
+
+                return res.status(400).json({
+                    mensaje:
+                        'Especifica un tipo de equipo diferente'
+                });
+
+            }
+
+
+            // ----------------------------------------------
+            // BUSCAR SI EL TIPO YA EXISTE
+            // ----------------------------------------------
+
+            const tipoExistente =
+                await cliente.query(
+                    `SELECT
+                        id_tipo,
+                        nombre,
+                        estado
+                     FROM tipos_equipo
+                     WHERE LOWER(TRIM(nombre))
+                           = LOWER(TRIM($1))
+                     LIMIT 1`,
+                    [tipo_personalizado]
+                );
+
+
+            // ----------------------------------------------
+            // SI YA EXISTE
+            // ----------------------------------------------
+
+            if (
+                tipoExistente.rows.length > 0
+            ) {
+
+                const existente =
+                    tipoExistente.rows[0];
+
+
+                if (!existente.estado) {
+
+                    await cliente.query('ROLLBACK');
+
+                    return res.status(400).json({
+                        mensaje:
+                            'Ese tipo de equipo existe pero se encuentra inactivo'
+                    });
+
+                }
+
+
+                // Reutilizamos el tipo existente.
+                idTipoFinal =
+                    existente.id_tipo;
+
+            } else {
+
+                // ------------------------------------------
+                // CREAR NUEVO TIPO
+                // ------------------------------------------
+
+                const nuevoTipo =
+                    await cliente.query(
+                        `INSERT INTO tipos_equipo (
+                            nombre,
+                            descripcion,
+                            estado
+                        )
+                        VALUES (
+                            $1,
+                            $2,
+                            TRUE
+                        )
+                        RETURNING
+                            id_tipo,
+                            nombre`,
+                        [
+                            tipo_personalizado,
+                            `Tipo agregado desde el registro de equipos: ${tipo_personalizado}`
+                        ]
+                    );
+
+
+                idTipoFinal =
+                    nuevoTipo.rows[0].id_tipo;
+
+            }
+
+        }
+
+
+        // ==================================================
+        // COMPROBAR ESTADO
+        // ==================================================
+
+        const estadoResultado =
+            await cliente.query(
+                `SELECT
+                    id_estado,
+                    nombre
+                 FROM estados_equipo
+                 WHERE id_estado = $1
+                   AND estado = TRUE`,
+                [idEstadoNumero]
+            );
+
+
+        if (
+            estadoResultado.rows.length === 0
+        ) {
+
+            await cliente.query('ROLLBACK');
+
+            return res.status(400).json({
+                mensaje:
+                    'Estado de equipo inválido'
+            });
+
+        }
+
+
+        // ==================================================
+        // NO PERMITIR "ASIGNADO"
+        // ==================================================
+
+        const nombreEstado =
+            estadoResultado.rows[0].nombre
+                .trim()
+                .toLowerCase();
+
+
+        if (nombreEstado === 'asignado') {
+
+            await cliente.query('ROLLBACK');
+
+            return res.status(400).json({
+                mensaje:
+                    'Un equipo nuevo no puede registrarse como Asignado'
+            });
+
+        }
+
+
+        // ==================================================
+        // INSERTAR EQUIPO
+        // ==================================================
+
+        const resultado =
+            await cliente.query(
+                `INSERT INTO equipos (
+                    codigo_interno,
+                    nombre,
+                    id_tipo,
+                    marca,
+                    modelo,
+                    serial,
+                    mac_address,
+                    ip_interna,
+                    fecha_compra,
+                    id_estado,
+                    observaciones
+                )
+                VALUES (
+                    $1,
+                    $2,
+                    $3,
+                    $4,
+                    $5,
+                    $6,
+                    $7,
+                    $8,
+                    $9,
+                    $10,
+                    $11
+                )
+                RETURNING
+                    id_equipo,
+                    codigo_interno,
+                    nombre,
+                    id_tipo,
+                    marca,
+                    modelo,
+                    serial,
+                    mac_address,
+                    ip_interna,
+                    fecha_compra,
+                    id_estado,
+                    observaciones,
+                    fecha_registro`,
+                [
+                    codigo_interno,
+                    nombre,
+                    idTipoFinal,
+                    marca,
+                    modelo,
+                    serial,
+                    mac_address,
+                    ip_interna,
+                    fecha_compra,
+                    idEstadoNumero,
+                    observaciones
+                ]
+            );
+
+
+        // ==================================================
+        // CONFIRMAR TRANSACCIÓN
+        // ==================================================
+
+        await cliente.query('COMMIT');
+
+
+        // ==================================================
+        // RESPUESTA EXITOSA
+        // ==================================================
+
+        return res.status(201).json({
+
+            mensaje:
+                'Equipo registrado correctamente',
+
+            equipo:
+                resultado.rows[0]
+
+        });
+
+
+    } catch (error) {
+
+        // ==================================================
+        // DESHACER TRANSACCIÓN
+        // ==================================================
+
+        if (cliente) {
+
+            try {
+                await cliente.query('ROLLBACK');
+            } catch {
+                // No hacemos nada adicional.
+            }
+
+        }
+
+
+        // ==================================================
+        // CÓDIGO INTERNO O SERIAL REPETIDO
+        // ==================================================
+
+        if (error.code === '23505') {
+
+            if (
+                error.constraint ===
+                'equipos_codigo_interno_key'
+            ) {
+
+                return res.status(409).json({
+                    mensaje:
+                        'Ya existe un equipo con ese código interno'
+                });
+
+            }
+
+
+            if (
+                error.constraint ===
+                'equipos_serial_key'
+            ) {
+
+                return res.status(409).json({
+                    mensaje:
+                        'Ya existe un equipo con ese número de serie'
+                });
+
+            }
+
+
+            return res.status(409).json({
+                mensaje:
+                    'Ya existe un registro con esos datos'
+            });
+
+        }
+
+
+        // ==================================================
+        // ERROR INESPERADO
+        // ==================================================
+
+        console.error(
+            'Error al registrar equipo:',
+            error
+        );
+
+
+        return res.status(500).json({
+            mensaje:
+                'Error interno al registrar el equipo'
+        });
+
+
+    } finally {
+
+        // ==================================================
+        // LIBERAR CONEXIÓN
+        // ==================================================
+
+        if (cliente) {
+            cliente.release();
+        }
 
     }
 
@@ -305,10 +1029,9 @@ app.post('/api/auth/login', async (req, res) => {
 
 
 // ======================================================
-// PUERTO DEL SERVIDOR
+// PUERTO
 // ======================================================
 
-// Nuestro backend funcionará inicialmente en el puerto 3000.
 const PORT = 3000;
 
 
@@ -316,7 +1039,6 @@ const PORT = 3000;
 // INICIAR SERVIDOR
 // ======================================================
 
-// Aquí finalmente encendemos el servidor.
 app.listen(PORT, () => {
 
     console.log(

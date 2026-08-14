@@ -42,7 +42,7 @@ function obtenerUsuario() {
   }
 }
 
-function MenuPrincipal({ onLogout }) {
+function MenuPrincipal({ onLogout, onRegistrarEquipo }) {
   const usuario = obtenerUsuario()
 
   const cerrarSesion = () => {
@@ -89,8 +89,8 @@ function MenuPrincipal({ onLogout }) {
 
       <main className="dashboard-main">
         <section className="shortcut-grid" aria-label="Accesos del sistema">
-          {tarjetas.map(([icono, titulo, descripcion]) => (
-            <button className="shortcut-card" type="button" key={titulo}>
+          {tarjetas.map(([icono, titulo, descripcion], indice) => (
+            <button className="shortcut-card" type="button" key={titulo} onClick={indice === 0 ? onRegistrarEquipo : undefined}>
               <span className="shortcut-icon"><Icono tipo={icono} /></span>
               <span className="shortcut-title">{titulo}<span aria-hidden="true">›</span></span>
               <span className="shortcut-description">{descripcion}</span>
