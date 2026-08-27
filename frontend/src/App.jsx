@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Login from './pages/Login.jsx'
 import MenuPrincipal from './pages/MenuPrincipal.jsx'
 import RegistrarEquipo from './pages/RegistrarEquipo.jsx'
+import BuscarEquipos from './pages/BuscarEquipos.jsx'
 
 function App() {
   const [autenticado, setAutenticado] = useState(() => Boolean(localStorage.getItem('token')))
@@ -16,9 +17,21 @@ function App() {
     return <Login onLogin={() => setAutenticado(true)} />
   }
 
-  return pantalla === 'registrar-equipo'
-    ? <RegistrarEquipo onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
-    : <MenuPrincipal onRegistrarEquipo={() => setPantalla('registrar-equipo')} onLogout={cerrarSesion} />
+  if (pantalla === 'registrar-equipo') {
+    return <RegistrarEquipo onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+  }
+
+  if (pantalla === 'buscar-equipos') {
+    return <BuscarEquipos onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+  }
+
+  return (
+    <MenuPrincipal
+      onRegistrarEquipo={() => setPantalla('registrar-equipo')}
+      onBuscarEquipos={() => setPantalla('buscar-equipos')}
+      onLogout={cerrarSesion}
+    />
+  )
 }
 
 export default App

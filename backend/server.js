@@ -1029,6 +1029,61 @@ app.post('/api/equipos', verificarToken, async (req, res) => {
 
 
 // ======================================================
+// ======================================================
+// OBTENER / BUSCAR EQUIPOS
+// ======================================================
+
+// GET http://localhost:3000/api/equipos
+//
+// Esta ruta obtiene los equipos registrados.
+// Está protegida con JWT, por lo que el usuario
+// debe haber iniciado sesión.
+
+app.get('/api/equipos', verificarToken, async (req, res) => {
+
+    try {
+
+        const resultado = await pool.query(
+            `SELECT
+                e.id_equipo,
+                e.codigo_interno,
+                e.nombre,
+                e.id_tipo,
+                t.nombre AS tipo_equipo,
+                e.marca,
+                e.modelo,
+                e.serial,
+                e.mac_address,
+                e.ip_interna,
+                e.fecha_compra,
+                e.id_estado,
+                es.nombre AS estado,
+                e.observaciones,
+                e.fecha_registro
+             FROM equipos e
+             INNER JOIN tipos_equipo t
+                ON e.id_tipo = t.id_tipo
+             INNER JOIN estados_equipo es
+                ON e.id_estado = es.id_estado
+             ORDER BY e.id_equipo DESC`
+        );
+
+        return res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener equipos:',
+            error
+        );
+
+        return res.status(500).json({
+            mensaje: 'Error interno al obtener los equipos'
+        });
+
+    }
+
+});
 // PUERTO
 // ======================================================
 

@@ -1,3 +1,8 @@
+// ======================================================
+// COMPONENTES Y DATOS AUXILIARES
+// ======================================================
+
+// Centraliza los trazos SVG para mantener iconos simples y consistentes.
 const Icono = ({ tipo }) => {
   const trazos = {
     inicio: <><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10M9 20v-6h6v6" /></>,
@@ -24,6 +29,8 @@ const opciones = [
   ['administradores', 'Administradores'],
 ]
 
+// Define los accesos visibles en el área principal.
+// La navegación funcional se asigna solo a las pantallas que ya existen.
 const tarjetas = [
   ['equipos', 'Registrar equipo', 'Agrega un nuevo equipo al inventario con sus detalles.'],
   ['buscar', 'Buscar equipos', 'Busca y consulta equipos por nombre, tipo, estado o número de serie.'],
@@ -34,6 +41,7 @@ const tarjetas = [
   ['administradores', 'Administradores', 'Gestiona los usuarios administradores con acceso al sistema.'],
 ]
 
+// Recupera de forma segura los datos básicos guardados después del Login.
 function obtenerUsuario() {
   try {
     return JSON.parse(localStorage.getItem('usuario')) || {}
@@ -42,14 +50,23 @@ function obtenerUsuario() {
   }
 }
 
-function MenuPrincipal({ onLogout, onRegistrarEquipo }) {
+// ======================================================
+// COMPONENTE MENÚ PRINCIPAL
+// ======================================================
+
+function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos }) {
   const usuario = obtenerUsuario()
 
+  // Elimina la sesión local y avisa a App para volver inmediatamente al Login.
   const cerrarSesion = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('usuario')
     onLogout()
   }
+
+  // ======================================================
+  // RENDERIZADO DEL MENÚ
+  // ======================================================
 
   return (
     <div className="dashboard">
@@ -62,6 +79,7 @@ function MenuPrincipal({ onLogout, onRegistrarEquipo }) {
           </div>
         </div>
 
+        {/* Inicio aparece activo porque esta es la pantalla principal del sistema. */}
         <nav className="sidebar-nav" aria-label="Navegación principal">
           {opciones.map(([icono, texto], indice) => (
             <button className={indice === 0 ? 'active' : ''} type="button" key={texto}>
@@ -89,8 +107,14 @@ function MenuPrincipal({ onLogout, onRegistrarEquipo }) {
 
       <main className="dashboard-main">
         <section className="shortcut-grid" aria-label="Accesos del sistema">
+          {/* Las dos primeras tarjetas notifican a App para cambiar de pantalla sin recargar. */}
           {tarjetas.map(([icono, titulo, descripcion], indice) => (
-            <button className="shortcut-card" type="button" key={titulo} onClick={indice === 0 ? onRegistrarEquipo : undefined}>
+            <button
+              className="shortcut-card"
+              type="button"
+              key={titulo}
+              onClick={indice === 0 ? onRegistrarEquipo : indice === 1 ? onBuscarEquipos : undefined}
+            >
               <span className="shortcut-icon"><Icono tipo={icono} /></span>
               <span className="shortcut-title">{titulo}<span aria-hidden="true">›</span></span>
               <span className="shortcut-description">{descripcion}</span>

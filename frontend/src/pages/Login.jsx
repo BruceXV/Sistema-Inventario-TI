@@ -1,12 +1,31 @@
+// ======================================================
+// IMPORTACIONES
+// ======================================================
+
+// useState permite conservar los valores del formulario y el estado de la solicitud.
 import { useState } from 'react'
 
+// ======================================================
+// COMPONENTE LOGIN
+// ======================================================
+
 function Login({ onLogin }) {
+  // Controla la visibilidad de la contraseña sin cambiar su valor.
   const [mostrarPassword, setMostrarPassword] = useState(false)
+
+  // Guardan las credenciales escritas por el usuario.
   const [correo, setCorreo] = useState('')
   const [password, setPassword] = useState('')
+
+  // Evita envíos simultáneos y permite informar el resultado dentro del formulario.
   const [procesando, setProcesando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
 
+  // ======================================================
+  // AUTENTICACIÓN CON EL BACKEND
+  // ======================================================
+
+  // Envía las credenciales al endpoint de Login sin recargar la página.
   const iniciarSesion = async (event) => {
     event.preventDefault()
 
@@ -16,6 +35,7 @@ function Login({ onLogin }) {
     setMensaje(null)
 
     try {
+      // El backend compara la contraseña y devuelve un JWT si las credenciales son válidas.
       const respuesta = await fetch('http://localhost:3000/api/auth/login', {
         method: 'POST',
         headers: {
@@ -27,6 +47,7 @@ function Login({ onLogin }) {
       const data = await respuesta.json()
 
       if (!respuesta.ok) {
+        // Traducimos las respuestas conocidas del backend a mensajes claros para el usuario.
         if (data.mensaje === 'Credenciales incorrectas') {
           setMensaje({ tipo: 'error', texto: 'Correo o contraseña incorrectos' })
         } else if (data.mensaje === 'Usuario inactivo') {
@@ -37,16 +58,25 @@ function Login({ onLogin }) {
         return
       }
 
+      // Conservamos el JWT y los datos básicos para mantener la sesión entre recargas.
+      // La contraseña nunca se guarda en localStorage.
       localStorage.setItem('token', data.token)
       localStorage.setItem('usuario', JSON.stringify(data.usuario))
       setMensaje({ tipo: 'exito', texto: 'Inicio de sesión exitoso' })
+
+      // App recibe esta notificación y muestra inmediatamente el Menú Principal.
       onLogin?.(data.usuario)
     } catch {
+      // fetch llega a este bloque cuando el servidor no está disponible o falla la red.
       setMensaje({ tipo: 'error', texto: 'No se pudo conectar con el servidor' })
     } finally {
       setProcesando(false)
     }
   }
+
+  // ======================================================
+  // INTERFAZ DEL LOGIN
+  // ======================================================
 
   return (
     <main className="login-page">
@@ -76,6 +106,7 @@ function Login({ onLogin }) {
           <p>Sistema de gestión de equipos de tecnología</p>
         </header>
 
+        {/* onSubmit permite iniciar sesión tanto con el botón como al presionar Enter. */}
         <form className="login-form" onSubmit={iniciarSesion}>
           <div className="form-field">
             <label htmlFor="correo">Correo electrónico</label>
@@ -137,6 +168,7 @@ function Login({ onLogin }) {
             {procesando ? 'Iniciando sesión...' : 'Iniciar sesión'}
           </button>
 
+          {/* Los resultados se muestran dentro de la tarjeta, sin usar alert(). */}
           {mensaje && (
             <p
               className={`login-message login-message--${mensaje.tipo}`}

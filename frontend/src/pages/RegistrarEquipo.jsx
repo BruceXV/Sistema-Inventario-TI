@@ -1,5 +1,15 @@
+// ======================================================
+// IMPORTACIONES
+// ======================================================
+
+// useState controla formulario y mensajes; useEffect carga los catálogos iniciales.
 import { useEffect, useState } from 'react'
 
+// ======================================================
+// COMPONENTES Y DATOS AUXILIARES
+// ======================================================
+
+// Centraliza los iconos SVG utilizados en el menú lateral.
 const Icono = ({ tipo }) => {
   const trazos = {
     inicio: <><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10M9 20v-6h6v6" /></>,
@@ -25,11 +35,13 @@ const opciones = [
   ['administradores', 'Administradores'],
 ]
 
+// Proporciona una única estructura para iniciar y limpiar el formulario.
 const formularioInicial = {
   codigoInterno: '', nombreEquipo: '', tipoEquipo: '', marca: '', estado: '',
   tipoPersonalizado: '', modelo: '', numeroSerie: '', macAddress: '', ipInterna: '', fechaCompra: '', observaciones: '',
 }
 
+// Recupera de forma segura el usuario autenticado guardado durante el Login.
 function obtenerUsuario() {
   try {
     return JSON.parse(localStorage.getItem('usuario')) || {}
@@ -38,28 +50,50 @@ function obtenerUsuario() {
   }
 }
 
+// ======================================================
+// COMPONENTE REGISTRAR EQUIPO
+// ======================================================
+
 function RegistrarEquipo({ onInicio, onLogout }) {
   const usuario = obtenerUsuario()
+
+  // ======================================================
+  // ESTADOS DEL COMPONENTE
+  // ======================================================
+
+  // Catálogos utilizados para construir los selects de tipo y estado.
   const [tiposEquipo, setTiposEquipo] = useState([])
   const [estadosEquipo, setEstadosEquipo] = useState([])
   const [cargandoCatalogos, setCargandoCatalogos] = useState(true)
   const [errorCatalogos, setErrorCatalogos] = useState(false)
+
+  // Datos controlados del formulario y errores asociados a cada campo.
   const [formulario, setFormulario] = useState(formularioInicial)
   const [errores, setErrores] = useState({})
+
+  // Controlan el envío para evitar duplicados y mostrar el resultado del backend.
   const [enviando, setEnviando] = useState(false)
   const [mensajeRegistro, setMensajeRegistro] = useState(null)
 
+  // Genera la fecha local actual para limitar y validar la fecha de compra.
   const hoy = (() => {
     const fecha = new Date()
     const desplazamiento = fecha.getTimezoneOffset() * 60000
     return new Date(fecha.getTime() - desplazamiento).toISOString().slice(0, 10)
   })()
 
+  // ======================================================
+  // CARGA DE CATÁLOGOS
+  // ======================================================
+
+  // Consulta tipos y estados cuando la pantalla se monta por primera vez.
   useEffect(() => {
+    // AbortController evita actualizar el componente si se abandona la pantalla durante la carga.
     const controlador = new AbortController()
 
     const cargarCatalogos = async () => {
       try {
+        // Promise.all carga ambos catálogos en paralelo para reducir el tiempo de espera.
         const [respuestaTipos, respuestaEstados] = await Promise.all([
           fetch('http://localhost:3000/api/tipos-equipo', { signal: controlador.signal }),
           fetch('http://localhost:3000/api/estados-equipo', { signal: controlador.signal }),
@@ -78,6 +112,7 @@ function RegistrarEquipo({ onInicio, onLogout }) {
         setEstadosEquipo(estados)
         setErrorCatalogos(false)
       } catch (error) {
+        // Los errores reales se muestran en el formulario; una cancelación normal se ignora.
         if (error.name !== 'AbortError') {
           setErrorCatalogos(true)
         }
@@ -93,18 +128,29 @@ function RegistrarEquipo({ onInicio, onLogout }) {
     return () => controlador.abort()
   }, [])
 
+  // ======================================================
+  // SESIÓN Y NAVEGACIÓN
+  // ======================================================
+
+  // Borra el JWT y el usuario local antes de volver al Login mediante App.
   const cerrarSesion = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('usuario')
     onLogout()
   }
 
+  // ======================================================
+  // CONTROL Y VALIDACIÓN DEL FORMULARIO
+  // ======================================================
+
+  // Actualiza el campo editado y retira su error para permitir una nueva validación.
   const cambiarCampo = (event) => {
     const { name, value } = event.target
     setFormulario((actual) => {
       const siguiente = { ...actual, [name]: value }
 
       if (name === 'tipoEquipo') {
+        // El campo personalizado solo tiene sentido mientras el tipo seleccionado sea "Otro".
         const tipoSeleccionado = tiposEquipo.find((tipo) => String(tipo.id_tipo) === value)
         if (tipoSeleccionado?.nombre.trim().toLowerCase() !== 'otro') {
           siguiente.tipoPersonalizado = ''
@@ -124,6 +170,7 @@ function RegistrarEquipo({ onInicio, onLogout }) {
     }
   }
 
+  // Aplica las reglas de formato y verifica que los IDs pertenezcan a los catálogos cargados.
   const validarFormulario = (datos) => {
     const nuevosErrores = {}
     const codigoValido = /^[A-Za-z0-9_-]{2,30}$/
@@ -151,6 +198,11 @@ function RegistrarEquipo({ onInicio, onLogout }) {
     return nuevosErrores
   }
 
+  // ======================================================
+  // ENVÍO AL BACKEND
+  // ======================================================
+
+  // Valida el formulario y, si es correcto, registra el equipo mediante la API protegida.
   const enviarFormulario = async (event) => {
     event.preventDefault()
 
@@ -167,12 +219,16 @@ function RegistrarEquipo({ onInicio, onLogout }) {
 
     const primerCampoInvalido = Object.keys(nuevosErrores)[0]
     if (primerCampoInvalido) {
+      // Lleva el foco al primer dato que necesita corrección.
       requestAnimationFrame(() => document.querySelector(`[name="${primerCampoInvalido}"]`)?.focus())
       return
     }
 
     const opcional = (valor) => valor || null
+    // Obtenemos el JWT guardado durante el Login para demostrar la autenticación al backend.
     const token = localStorage.getItem('token')
+
+    // Adaptamos los nombres del estado de React al formato esperado por POST /api/equipos.
     const datosEquipo = {
       codigo_interno: datosNormalizados.codigoInterno,
       nombre: datosNormalizados.nombreEquipo,
@@ -193,6 +249,7 @@ function RegistrarEquipo({ onInicio, onLogout }) {
     setEnviando(true)
 
     try {
+      // Authorization envía el JWT con el esquema Bearer requerido por la ruta protegida.
       const respuesta = await fetch('http://localhost:3000/api/equipos', {
         method: 'POST',
         headers: {
@@ -204,6 +261,7 @@ function RegistrarEquipo({ onInicio, onLogout }) {
       const data = await respuesta.json()
 
       if (respuesta.status === 201) {
+        // Tras registrar, limpiamos los campos pero conservamos los catálogos ya cargados.
         setFormulario(formularioInicial)
         setErrores({})
         setMensajeRegistro({ tipo: 'exito', texto: 'Equipo registrado correctamente' })
@@ -212,11 +270,13 @@ function RegistrarEquipo({ onInicio, onLogout }) {
       } else if (respuesta.status === 409 && data.mensaje === 'Ya existe un equipo con ese número de serie') {
         setMensajeRegistro({ tipo: 'error', texto: 'Ya existe un equipo con ese número de serie' })
       } else if (respuesta.status === 401) {
+        // No eliminamos automáticamente la sesión para que el usuario pueda leer el aviso.
         setMensajeRegistro({ tipo: 'error', texto: 'La sesión expiró. Inicia sesión nuevamente.' })
       } else {
         setMensajeRegistro({ tipo: 'error', texto: data.mensaje || 'No fue posible registrar el equipo' })
       }
     } catch {
+      // fetch falla aquí si el backend no está disponible o existe un problema de red.
       setMensajeRegistro({ tipo: 'error', texto: 'No se pudo conectar con el servidor' })
     } finally {
       setEnviando(false)
@@ -224,6 +284,10 @@ function RegistrarEquipo({ onInicio, onLogout }) {
   }
 
   const claseCampo = (nombre) => errores[nombre] ? 'field-control--error' : ''
+
+  // ======================================================
+  // RENDERIZADO DE LA PANTALLA
+  // ======================================================
 
   return (
     <div className="dashboard">
@@ -272,6 +336,7 @@ function RegistrarEquipo({ onInicio, onLogout }) {
             <h1 id="equipment-form-title">Registrar equipo</h1>
           </header>
 
+          {/* noValidate permite mostrar mensajes propios y mantener una experiencia consistente. */}
           <form className="equipment-form" onSubmit={enviarFormulario} noValidate>
             <div className="equipment-field">
               <label htmlFor="codigo-interno">Código interno <span>*</span></label>
@@ -293,6 +358,7 @@ function RegistrarEquipo({ onInicio, onLogout }) {
               </select>
               {errores.tipoEquipo && <small className="field-error">{errores.tipoEquipo}</small>}
             </div>
+            {/* El tipo personalizado aparece únicamente al seleccionar la opción "Otro" del catálogo. */}
             {tiposEquipo.find((tipo) => String(tipo.id_tipo) === formulario.tipoEquipo)?.nombre.trim().toLowerCase() === 'otro' && (
               <div className="equipment-field">
                 <label htmlFor="tipo-personalizado">Especificar tipo de equipo <span>*</span></label>
@@ -309,6 +375,7 @@ function RegistrarEquipo({ onInicio, onLogout }) {
               <label htmlFor="estado">Estado <span>*</span></label>
               <select id="estado" name="estado" value={formulario.estado} onChange={cambiarCampo} disabled={cargandoCatalogos} className={claseCampo('estado')} aria-invalid={Boolean(errores.estado)}>
                 <option value="" disabled>Selecciona un estado</option>
+                {/* Un equipo nuevo no puede comenzar con el estado Asignado. */}
                 {estadosEquipo.filter((estado) => estado.nombre.trim().toLowerCase() !== 'asignado').map((estado) => (
                   <option value={estado.id_estado} key={estado.id_estado}>{estado.nombre}</option>
                 ))}
