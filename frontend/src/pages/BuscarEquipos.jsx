@@ -49,7 +49,7 @@ function obtenerUsuario() {
 // COMPONENTE BUSCAR EQUIPOS
 // ======================================================
 
-function BuscarEquipos({ onInicio, onLogout }) {
+function BuscarEquipos({ onInicio, onLogout, onVerDetalle }) {
   const usuario = obtenerUsuario()
 
   // Separamos el inventario completo de los registros que muestra la tabla.
@@ -307,27 +307,28 @@ function BuscarEquipos({ onInicio, onLogout }) {
                     <th>Marca / Modelo</th>
                     <th>Número de serie</th>
                     <th>Estado</th>
+                    <th>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
                   {cargandoEquipos && (
                     <tr>
-                      <td className="equipment-empty-state" colSpan="6">Cargando equipos...</td>
+                      <td className="equipment-empty-state" colSpan="7">Cargando equipos...</td>
                     </tr>
                   )}
                   {!cargandoEquipos && errorEquipos && (
                     <tr>
-                      <td className="equipment-empty-state" colSpan="6">{errorEquipos}</td>
+                      <td className="equipment-empty-state" colSpan="7">{errorEquipos}</td>
                     </tr>
                   )}
                   {!cargandoEquipos && !errorEquipos && equiposOriginales.length === 0 && (
                     <tr>
-                      <td className="equipment-empty-state" colSpan="6">No hay equipos para mostrar.</td>
+                      <td className="equipment-empty-state" colSpan="7">No hay equipos para mostrar.</td>
                     </tr>
                   )}
                   {!cargandoEquipos && !errorEquipos && equiposOriginales.length > 0 && filtrosAplicados && equiposFiltrados.length === 0 && (
                     <tr>
-                      <td className="equipment-empty-state" colSpan="6">No se encontraron equipos con los filtros seleccionados.</td>
+                      <td className="equipment-empty-state" colSpan="7">No se encontraron equipos con los filtros seleccionados.</td>
                     </tr>
                   )}
                   {!cargandoEquipos && !errorEquipos && equiposFiltrados.map((equipo) => (
@@ -338,6 +339,11 @@ function BuscarEquipos({ onInicio, onLogout }) {
                       <td>{equipo.modelo ? `${equipo.marca} / ${equipo.modelo}` : equipo.marca}</td>
                       <td>{equipo.serial || '-'}</td>
                       <td>{equipo.estado}</td>
+                      <td>
+                        <button className="table-detail-button" type="button" onClick={() => onVerDetalle(equipo.id_equipo)}>
+                          Ver detalle
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

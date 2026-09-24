@@ -1139,6 +1139,23 @@ button {
   text-align: center;
 }
 
+.table-detail-button {
+  padding: 8px 13px;
+  color: #1260df;
+  background: #edf4ff;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.table-detail-button:hover {
+  color: #fff;
+  background: #1260df;
+}
+
 @media (max-width: 1050px) {
   .equipment-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1174,5 +1191,132 @@ button {
 
   .equipment-filter-actions button {
     width: 100%;
+  }
+}
+
+.detail-equipment-page {
+  padding-top: 38px;
+  padding-bottom: 38px;
+}
+
+.detail-equipment-card {
+  width: min(100%, 980px);
+  margin: auto;
+  padding: 34px 38px 38px;
+  background: #fff;
+  border: 1px solid #e2e9f2;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(25, 52, 89, 0.07);
+}
+
+.detail-equipment-header {
+  padding-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #e1e8f1;
+}
+
+.detail-equipment-header h1 {
+  margin: 0;
+  color: #0b1e40;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.detail-equipment-header p {
+  margin: 7px 0 0;
+  color: #64738d;
+  font-size: 0.9rem;
+}
+
+.detail-back-button {
+  height: 44px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.detail-back-button svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.detail-equipment-status {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  color: #71809a;
+  text-align: center;
+}
+
+.detail-equipment-status--error {
+  color: #9f2533;
+}
+
+.detail-equipment-grid {
+  margin: 28px 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+}
+
+.detail-equipment-field {
+  min-width: 0;
+  padding: 17px 18px;
+  background: #f7f9fc;
+  border: 1px solid #e4ebf3;
+  border-radius: 10px;
+}
+
+.detail-equipment-field--full {
+  grid-column: 1 / -1;
+}
+
+.detail-equipment-field dt {
+  color: #64738d;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.detail-equipment-field dd {
+  margin: 7px 0 0;
+  overflow-wrap: anywhere;
+  color: #0b1e40;
+  font-size: 0.96rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+  .detail-equipment-page {
+    padding: 22px 16px;
+  }
+
+  .detail-equipment-card {
+    padding: 26px 20px;
+  }
+
+  .detail-equipment-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .detail-equipment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-equipment-field--full {
+    grid-column: auto;
   }
 }

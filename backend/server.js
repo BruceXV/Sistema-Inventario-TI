@@ -1084,6 +1084,85 @@ app.get('/api/equipos', verificarToken, async (req, res) => {
     }
 
 });
+// ======================================================
+// OBTENER DETALLE DE UN EQUIPO
+// ======================================================
+
+// GET http://localhost:3000/api/equipos/:id
+//
+// Esta ruta obtiene todos los datos de un equipo
+// específico utilizando su id_equipo.
+// Está protegida con JWT.
+
+app.get('/api/equipos/:id', verificarToken, async (req, res) => {
+
+    try {
+
+        // Obtener el ID enviado en la URL
+        const idEquipo = Number(req.params.id);
+
+        // Validar que el ID sea un número entero válido
+        if (!Number.isInteger(idEquipo) || idEquipo <= 0) {
+
+            return res.status(400).json({
+                mensaje: 'ID de equipo inválido'
+            });
+
+        }
+
+        // Buscar el equipo en PostgreSQL
+        const resultado = await pool.query(
+            `SELECT
+                e.id_equipo,
+                e.codigo_interno,
+                e.nombre,
+                e.id_tipo,
+                t.nombre AS tipo_equipo,
+                e.marca,
+                e.modelo,
+                e.serial,
+                e.mac_address,
+                e.ip_interna,
+                e.fecha_compra,
+                e.id_estado,
+                es.nombre AS estado,
+                e.observaciones,
+                e.fecha_registro
+             FROM equipos e
+             INNER JOIN tipos_equipo t
+                ON e.id_tipo = t.id_tipo
+             INNER JOIN estados_equipo es
+                ON e.id_estado = es.id_estado
+             WHERE e.id_equipo = $1`,
+            [idEquipo]
+        );
+
+        // Si no existe un equipo con ese ID
+        if (resultado.rows.length === 0) {
+
+            return res.status(404).json({
+                mensaje: 'Equipo no encontrado'
+            });
+
+        }
+
+        // Devolver todos los datos del equipo encontrado
+        return res.json(resultado.rows[0]);
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener detalle del equipo:',
+            error
+        );
+
+        return res.status(500).json({
+            mensaje: 'Error interno al obtener el equipo'
+        });
+
+    }
+
+});
 // PUERTO
 // ======================================================
 

@@ -3,14 +3,17 @@ import Login from './pages/Login.jsx'
 import MenuPrincipal from './pages/MenuPrincipal.jsx'
 import RegistrarEquipo from './pages/RegistrarEquipo.jsx'
 import BuscarEquipos from './pages/BuscarEquipos.jsx'
+import DetalleEquipo from './pages/DetalleEquipo.jsx'
 
 function App() {
   const [autenticado, setAutenticado] = useState(() => Boolean(localStorage.getItem('token')))
   const [pantalla, setPantalla] = useState('inicio')
+  const [equipoSeleccionado, setEquipoSeleccionado] = useState(null)
 
   const cerrarSesion = () => {
     setAutenticado(false)
     setPantalla('inicio')
+    setEquipoSeleccionado(null)
   }
 
   if (!autenticado) {
@@ -22,7 +25,27 @@ function App() {
   }
 
   if (pantalla === 'buscar-equipos') {
-    return <BuscarEquipos onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+    return (
+      <BuscarEquipos
+        onInicio={() => setPantalla('inicio')}
+        onVerDetalle={(idEquipo) => {
+          setEquipoSeleccionado(idEquipo)
+          setPantalla('detalle-equipo')
+        }}
+        onLogout={cerrarSesion}
+      />
+    )
+  }
+
+  if (pantalla === 'detalle-equipo') {
+    return (
+      <DetalleEquipo
+        idEquipo={equipoSeleccionado}
+        onInicio={() => setPantalla('inicio')}
+        onVolver={() => setPantalla('buscar-equipos')}
+        onLogout={cerrarSesion}
+      />
+    )
   }
 
   return (
