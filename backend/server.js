@@ -1163,7 +1163,236 @@ app.get('/api/equipos/:id', verificarToken, async (req, res) => {
     }
 
 });
+// ============================================================
+// REGISTRAR EMPLEADO
+// ============================================================
+
+// POST http://localhost:3000/api/empleados
+// Esta ruta permite registrar un nuevo empleado en el sistema.
+// Está protegida con JWT, por lo que el usuario debe haber
+// iniciado sesión.
+
+// ============================================================
+// REGISTRAR EMPLEADO
+// ============================================================
+
+// POST http://localhost:3000/api/empleados
+// Esta ruta permite registrar un nuevo empleado en el sistema.
+// Está protegida con JWT.
+
+app.post('/api/empleados', verificarToken, async (req, res) => {
+
+    try {
+
+        // --------------------------------------------------
+        // RECIBIR DATOS
+        // --------------------------------------------------
+
+        const {
+            rut,
+            nombres,
+            apellidos,
+            correo,
+            telefono,
+            id_area,
+            cargo,
+            fecha_ingreso
+        } = req.body;
+
+
+        // --------------------------------------------------
+        // VALIDAR CAMPOS OBLIGATORIOS
+        // --------------------------------------------------
+
+        if (
+            !rut ||
+            !nombres ||
+            !apellidos ||
+            !correo ||
+            !id_area
+        ) {
+
+            return res.status(400).json({
+                mensaje:
+                    'RUT, nombres, apellidos, correo y área son obligatorios'
+            });
+
+        }
+
+
+        // --------------------------------------------------
+        // REGISTRAR EMPLEADO EN POSTGRESQL
+        // --------------------------------------------------
+
+        const resultado = await pool.query(
+            `INSERT INTO empleados (
+                rut,
+                nombres,
+                apellidos,
+                correo,
+                telefono,
+                id_area,
+                cargo,
+                fecha_ingreso
+            )
+            VALUES (
+                $1,
+                $2,
+                $3,
+                $4,
+                $5,
+                $6,
+                $7,
+                $8
+            )
+            RETURNING
+                id_empleado,
+                rut,
+                nombres,
+                apellidos,
+                correo,
+                telefono,
+                id_area,
+                cargo,
+                fecha_ingreso,
+                estado`,
+            [
+                rut,
+                nombres,
+                apellidos,
+                correo,
+                telefono || null,
+                id_area,
+                cargo || null,
+                fecha_ingreso || null
+            ]
+        );
+
+
+        // --------------------------------------------------
+        // RESPUESTA EXITOSA
+        // --------------------------------------------------
+
+        return res.status(201).json({
+
+            mensaje:
+                'Empleado registrado correctamente',
+
+            empleado:
+                resultado.rows[0]
+
+        });
+
+
+    } catch (error) {
+
+        // --------------------------------------------------
+        // RUT O CORREO DUPLICADO
+        // --------------------------------------------------
+
+        if (error.code === '23505') {
+
+            if (
+                error.constraint ===
+                'empleados_rut_key'
+            ) {
+
+                return res.status(409).json({
+                    mensaje:
+                        'Ya existe un empleado con ese RUT'
+                });
+
+            }
+
+
+            if (
+                error.constraint ===
+                'empleados_correo_key'
+            ) {
+
+                return res.status(409).json({
+                    mensaje:
+                        'Ya existe un empleado con ese correo'
+                });
+
+            }
+
+        }
+
+
+        // --------------------------------------------------
+        // ÁREA NO EXISTE
+        // --------------------------------------------------
+
+        if (error.code === '23503') {
+
+            return res.status(400).json({
+                mensaje:
+                    'El área seleccionada no existe'
+            });
+
+        }
+
+
+        // --------------------------------------------------
+        // ERROR INESPERADO
+        // --------------------------------------------------
+
+        console.error(
+            'Error al registrar empleado:',
+            error
+        );
+
+        return res.status(500).json({
+            mensaje:
+                'Error interno al registrar el empleado'
+        });
+
+    }
+
+});
+// ============================================================
+// OBTENER ÁREAS
+// ============================================================
+
+// GET http://localhost:3000/api/areas
+// Obtiene las áreas activas registradas en la base de datos.
+// Esta información se utilizará en el formulario
+// para registrar empleados.
+
+app.get('/api/areas', verificarToken, async (req, res) => {
+
+    try {
+
+        // Obtener las áreas activas
+        const resultado = await pool.query(
+            `SELECT
+                id_area,
+                nombre
+             FROM areas
+             WHERE estado = true
+             ORDER BY nombre ASC`
+        );
+
+        // Devolver las áreas encontradas
+        return res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener áreas:',
+            error
+        );
+
+        return res.status(500).json({
+            mensaje: 'Error interno al obtener las áreas'
+        });
+
+    }
+
+});
 // PUERTO
+
 // ======================================================
 
 const PORT = 3000;

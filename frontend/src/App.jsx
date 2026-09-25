@@ -4,6 +4,7 @@ import MenuPrincipal from './pages/MenuPrincipal.jsx'
 import RegistrarEquipo from './pages/RegistrarEquipo.jsx'
 import BuscarEquipos from './pages/BuscarEquipos.jsx'
 import DetalleEquipo from './pages/DetalleEquipo.jsx'
+import RegistrarEmpleado from './pages/RegistrarEmpleado.jsx'
 
 function App() {
   const [autenticado, setAutenticado] = useState(() => Boolean(localStorage.getItem('token')))
@@ -48,10 +49,15 @@ function App() {
     )
   }
 
+  if (pantalla === 'registrar-empleado') {
+    return <RegistrarEmpleado onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+  }
+
   return (
     <MenuPrincipal
       onRegistrarEquipo={() => setPantalla('registrar-equipo')}
       onBuscarEquipos={() => setPantalla('buscar-equipos')}
+      onRegistrarEmpleado={() => setPantalla('registrar-empleado')}
       onLogout={cerrarSesion}
     />
   )
