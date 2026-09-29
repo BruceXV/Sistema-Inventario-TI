@@ -1706,6 +1706,1004 @@ app.get('/api/empleados/:id', verificarToken, async (req, res) => {
     }
 
 });
+
+// ============================================================
+// REGISTRAR ASIGNACIÓN DE EQUIPO
+// ============================================================
+
+// POST http://localhost:3000/api/asignaciones
+// Permite asignar un equipo disponible a un empleado activo.
+// La asignación y el cambio de estado del equipo se realizan
+// dentro de una transacción para evitar datos inconsistentes.
+// Está protegida mediante JWT.
+
+app.post('/api/asignaciones', verificarToken, async (req, res) => {
+
+    // Obtener los datos enviados desde el formulario
+    const {
+        id_equipo,
+        id_empleado,
+        fecha_asignacion,
+        observaciones
+    } = req.body;
+
+
+    // ========================================================
+    // VALIDAR CAMPOS OBLIGATORIOS
+    // ========================================================
+
+    if (
+        id_equipo === undefined ||
+        id_equipo === null ||
+        id_equipo === ''
+    ) {
+        return res.status(400).json({
+            mensaje: 'El equipo es obligatorio'
+        });
+    }
+
+
+    if (
+        id_empleado === undefined ||
+        id_empleado === null ||
+        id_empleado === ''
+    ) {
+        return res.status(400).json({
+            mensaje: 'El empleado es obligatorio'
+        });
+    }
+
+
+    if (
+        fecha_asignacion === undefined ||
+        fecha_asignacion === null ||
+        String(fecha_asignacion).trim() === ''
+    ) {
+        return res.status(400).json({
+            mensaje: 'La fecha de asignación es obligatoria'
+        });
+    }
+
+
+    if (
+        observaciones === undefined ||
+        observaciones === null ||
+        String(observaciones).trim() === ''
+    ) {
+        return res.status(400).json({
+            mensaje: 'Las observaciones son obligatorias'
+        });
+    }
+
+
+    // ========================================================
+    // VALIDAR IDs
+    // ========================================================
+
+    const idEquipo = Number(id_equipo);
+    const idEmpleado = Number(id_empleado);
+
+
+    if (
+        !Number.isInteger(idEquipo) ||
+        idEquipo <= 0
+    ) {
+        return res.status(400).json({
+            mensaje: 'El equipo seleccionado no es válido'
+        });
+    }
+
+
+    if (
+        !Number.isInteger(idEmpleado) ||
+        idEmpleado <= 0
+    ) {
+        return res.status(400).json({
+            mensaje: 'El empleado seleccionado no es válido'
+        });
+    }
+
+
+    // ========================================================
+    // VALIDAR FECHA DE ASIGNACIÓN
+    // ========================================================
+
+    const fechaTexto = String(fecha_asignacion).trim();
+
+    // La fecha debe llegar en formato YYYY-MM-DD
+    const formatoFecha = /^\d{4}-\d{2}-\d{2}$/;
+
+
+    if (!formatoFecha.test(fechaTexto)) {
+        return res.status(400).json({
+            mensaje: 'La fecha de asignación no es válida'
+        });
+    }
+
+
+    const [anio, mes, dia] = fechaTexto
+        .split('-')
+        .map(Number);
+
+
+    const fechaValidacion = new Date(
+        anio,
+        mes - 1,
+        dia
+    );
+
+
+    // Comprobar que la fecha realmente exista
+    if (
+        fechaValidacion.getFullYear() !== anio ||
+        fechaValidacion.getMonth() !== mes - 1 ||
+        fechaValidacion.getDate() !== dia
+    ) {
+        return res.status(400).json({
+            mensaje: 'La fecha de asignación no es válida'
+        });
+    }
+
+
+    // No permitir fechas futuras
+    const hoy = new Date();
+
+    hoy.setHours(0, 0, 0, 0);
+    fechaValidacion.setHours(0, 0, 0, 0);
+
+
+    if (fechaValidacion > hoy) {
+        return res.status(400).json({
+            mensaje: 'La fecha de asignación no puede ser futura'
+        });
+    }
+
+
+    // ========================================================
+    // NORMALIZAR OBSERVACIONES
+    // ========================================================
+
+    const observacionesNormalizadas =
+        String(observaciones).trim();
+
+
+    // ========================================================
+    // INICIAR TRANSACCIÓN
+    // ========================================================
+
+    const cliente = await pool.connect();
+
+    try {
+
+        await cliente.query('BEGIN');
+
+
+        // ====================================================
+        // BUSCAR Y BLOQUEAR EL EQUIPO
+        // ====================================================
+
+        const resultadoEquipo = await cliente.query(
+            `
+            SELECT
+                id_equipo,
+                codigo_interno,
+                nombre,
+                id_estado
+            FROM equipos
+            WHERE id_equipo = $1
+            FOR UPDATE
+            `,
+            [idEquipo]
+        );
+
+
+        // ====================================================
+        // VALIDAR EXISTENCIA DEL EQUIPO
+        // ====================================================
+
+        if (resultadoEquipo.rows.length === 0) {
+
+            await cliente.query('ROLLBACK');
+
+            return res.status(404).json({
+                mensaje: 'Equipo no encontrado'
+            });
+        }
+
+
+        const equipo = resultadoEquipo.rows[0];
+
+
+        // ====================================================
+        // VALIDAR DISPONIBILIDAD DEL EQUIPO
+        // ====================================================
+
+        // Estados actuales:
+        // 1 = Disponible
+        // 2 = Asignado
+        // 3 = En reparación
+        // 4 = Dado de baja
+
+        if (equipo.id_estado !== 1) {
+
+            await cliente.query('ROLLBACK');
+
+            return res.status(409).json({
+                mensaje: 'El equipo seleccionado no está disponible'
+            });
+        }
+
+
+        // ====================================================
+        // BUSCAR EMPLEADO
+        // ====================================================
+
+        const resultadoEmpleado = await cliente.query(
+            `
+            SELECT
+                id_empleado,
+                rut,
+                nombres,
+                apellidos,
+                estado
+            FROM empleados
+            WHERE id_empleado = $1
+            `,
+            [idEmpleado]
+        );
+
+
+        // ====================================================
+        // VALIDAR EXISTENCIA DEL EMPLEADO
+        // ====================================================
+
+        if (resultadoEmpleado.rows.length === 0) {
+
+            await cliente.query('ROLLBACK');
+
+            return res.status(404).json({
+                mensaje: 'Empleado no encontrado'
+            });
+        }
+
+
+        const empleado = resultadoEmpleado.rows[0];
+
+
+        // ====================================================
+        // VALIDAR QUE EL EMPLEADO ESTÉ ACTIVO
+        // ====================================================
+
+        if (empleado.estado !== true) {
+
+            await cliente.query('ROLLBACK');
+
+            return res.status(409).json({
+                mensaje: 'No se puede asignar un equipo a un empleado inactivo'
+            });
+        }
+
+
+        // ====================================================
+        // REGISTRAR ASIGNACIÓN
+        // ====================================================
+
+        const resultadoAsignacion = await cliente.query(
+            `
+            INSERT INTO asignaciones (
+                id_equipo,
+                id_empleado,
+                fecha_asignacion,
+                observaciones
+            )
+            VALUES (
+                $1,
+                $2,
+                $3::timestamp,
+                $4
+            )
+            RETURNING
+                id_asignacion,
+                id_equipo,
+                id_empleado,
+                fecha_asignacion,
+                observaciones
+            `,
+            [
+                idEquipo,
+                idEmpleado,
+                fechaTexto,
+                observacionesNormalizadas
+            ]
+        );
+
+
+        // ====================================================
+        // CAMBIAR EL EQUIPO A "ASIGNADO"
+        // ====================================================
+
+        // id_estado = 2 corresponde a "Asignado"
+
+        await cliente.query(
+            `
+            UPDATE equipos
+            SET id_estado = 2
+            WHERE id_equipo = $1
+            `,
+            [idEquipo]
+        );
+
+
+        // ====================================================
+        // CONFIRMAR TRANSACCIÓN
+        // ====================================================
+
+        await cliente.query('COMMIT');
+
+
+        // ====================================================
+        // RESPUESTA EXITOSA
+        // ====================================================
+
+        return res.status(201).json({
+
+            mensaje: 'Equipo asignado correctamente',
+
+            asignacion: {
+                ...resultadoAsignacion.rows[0],
+
+                equipo: {
+                    id_equipo: equipo.id_equipo,
+                    codigo_interno: equipo.codigo_interno,
+                    nombre: equipo.nombre
+                },
+
+                empleado: {
+                    id_empleado: empleado.id_empleado,
+                    rut: empleado.rut,
+                    nombres: empleado.nombres,
+                    apellidos: empleado.apellidos
+                }
+            }
+
+        });
+
+
+    } catch (error) {
+
+        // ====================================================
+        // REVERTIR TRANSACCIÓN SI OCURRE UN ERROR
+        // ====================================================
+
+        try {
+            await cliente.query('ROLLBACK');
+        } catch (errorRollback) {
+            console.error(
+                'Error al revertir la transacción:',
+                errorRollback
+            );
+        }
+
+
+        console.error(
+            'Error al registrar la asignación:',
+            error
+        );
+
+
+        return res.status(500).json({
+            mensaje: 'Error interno al registrar la asignación'
+        });
+
+
+    } finally {
+
+        // Liberar la conexión para devolverla al pool
+        cliente.release();
+
+    }
+
+});
+
+// ============================================================
+// LISTAR ASIGNACIONES
+// ============================================================
+
+// GET http://localhost:3000/api/asignaciones
+// Permite obtener las asignaciones registradas en el sistema.
+// Incluye información del equipo, empleado y si la asignación
+// ya posee una devolución.
+// Está protegida mediante JWT.
+
+app.get('/api/asignaciones', verificarToken, async (req, res) => {
+
+    try {
+
+        // ====================================================
+        // OBTENER FILTROS
+        // ====================================================
+
+        const {
+            estado
+        } = req.query;
+
+
+        // ====================================================
+        // CONSULTA BASE
+        // ====================================================
+
+        let consulta = `
+            SELECT
+                a.id_asignacion,
+                a.id_equipo,
+                a.id_empleado,
+                a.fecha_asignacion,
+                a.observaciones AS observaciones_asignacion,
+
+                e.codigo_interno,
+                e.nombre AS nombre_equipo,
+                e.marca,
+                e.modelo,
+                e.serial,
+                e.id_estado AS id_estado_equipo,
+
+                emp.rut,
+                emp.nombres,
+                emp.apellidos,
+                emp.correo,
+
+                d.id_devolucion,
+                d.fecha_devolucion,
+                d.condicion_devolucion,
+                d.observaciones AS observaciones_devolucion
+
+            FROM asignaciones a
+
+            INNER JOIN equipos e
+                ON a.id_equipo = e.id_equipo
+
+            INNER JOIN empleados emp
+                ON a.id_empleado = emp.id_empleado
+
+            LEFT JOIN devoluciones d
+                ON a.id_asignacion = d.id_asignacion
+
+            WHERE 1 = 1
+        `;
+
+
+        // ====================================================
+        // FILTRAR POR ESTADO DE LA ASIGNACIÓN
+        // ====================================================
+
+        // Una asignación se considera:
+        //
+        // activa:
+        //     cuando todavía NO tiene una devolución.
+        //
+        // devuelta:
+        //     cuando ya existe una devolución asociada.
+
+        if (
+            estado !== undefined &&
+            estado !== null &&
+            estado !== ''
+        ) {
+
+            if (estado === 'activa') {
+
+                consulta += `
+                    AND d.id_devolucion IS NULL
+                `;
+
+            } else if (estado === 'devuelta') {
+
+                consulta += `
+                    AND d.id_devolucion IS NOT NULL
+                `;
+
+            } else if (estado !== 'todas') {
+
+                return res.status(400).json({
+                    mensaje: 'El estado de la asignación no es válido'
+                });
+
+            }
+
+        }
+
+
+        // ====================================================
+        // ORDENAR RESULTADOS
+        // ====================================================
+
+        consulta += `
+            ORDER BY
+                a.fecha_asignacion DESC,
+                a.id_asignacion DESC
+        `;
+
+
+        // ====================================================
+        // EJECUTAR CONSULTA
+        // ====================================================
+
+        const resultado = await pool.query(consulta);
+
+
+        // ====================================================
+        // FORMATEAR RESULTADOS
+        // ====================================================
+
+        const asignaciones = resultado.rows.map((fila) => ({
+
+            id_asignacion: fila.id_asignacion,
+
+            fecha_asignacion: fila.fecha_asignacion,
+
+            observaciones: fila.observaciones_asignacion,
+
+            estado_asignacion:
+                fila.id_devolucion === null
+                    ? 'Activa'
+                    : 'Devuelta',
+
+            equipo: {
+
+                id_equipo: fila.id_equipo,
+
+                codigo_interno: fila.codigo_interno,
+
+                nombre: fila.nombre_equipo,
+
+                marca: fila.marca,
+
+                modelo: fila.modelo,
+
+                serial: fila.serial,
+
+                id_estado: fila.id_estado_equipo
+
+            },
+
+            empleado: {
+
+                id_empleado: fila.id_empleado,
+
+                rut: fila.rut,
+
+                nombres: fila.nombres,
+
+                apellidos: fila.apellidos,
+
+                correo: fila.correo
+
+            },
+
+            devolucion:
+                fila.id_devolucion === null
+                    ? null
+                    : {
+
+                        id_devolucion: fila.id_devolucion,
+
+                        fecha_devolucion:
+                            fila.fecha_devolucion,
+
+                        condicion_devolucion:
+                            fila.condicion_devolucion,
+
+                        observaciones:
+                            fila.observaciones_devolucion
+
+                    }
+
+        }));
+
+
+        // ====================================================
+        // DEVOLVER RESULTADOS
+        // ====================================================
+
+        return res.json(asignaciones);
+
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener asignaciones:',
+            error
+        );
+
+
+        return res.status(500).json({
+            mensaje: 'Error interno al obtener las asignaciones'
+        });
+
+    }
+
+});
+
+// ============================================================
+// REGISTRAR DEVOLUCIÓN DE EQUIPO
+// ============================================================
+
+// POST http://localhost:3000/api/devoluciones
+//
+// Registra la devolución de una asignación activa y cambia
+// automáticamente el equipo de "Asignado" a "Disponible".
+
+app.post('/api/devoluciones', verificarToken, async (req, res) => {
+
+    const client = await pool.connect();
+
+    try {
+
+        const {
+            id_asignacion,
+            fecha_devolucion,
+            condicion_devolucion,
+            observaciones
+        } = req.body;
+
+
+        // ====================================================
+        // VALIDACIONES BÁSICAS
+        // ====================================================
+
+        if (!id_asignacion) {
+            return res.status(400).json({
+                mensaje: 'La asignación es obligatoria'
+            });
+        }
+
+        if (!fecha_devolucion) {
+            return res.status(400).json({
+                mensaje: 'La fecha de devolución es obligatoria'
+            });
+        }
+
+        if (
+            !condicion_devolucion ||
+            !condicion_devolucion.trim()
+        ) {
+            return res.status(400).json({
+                mensaje: 'La condición de devolución es obligatoria'
+            });
+        }
+
+
+        // ====================================================
+        // VALIDAR CONDICIÓN
+        // ====================================================
+
+        const condicionesPermitidas = [
+            'Buen estado',
+            'Con daños',
+            'Requiere reparación'
+        ];
+
+        if (
+            !condicionesPermitidas.includes(
+                condicion_devolucion.trim()
+            )
+        ) {
+            return res.status(400).json({
+                mensaje: 'La condición de devolución no es válida'
+            });
+        }
+
+
+        // ====================================================
+        // VALIDAR FECHA
+        // ====================================================
+
+        const fechaIngresada = new Date(
+            `${fecha_devolucion}T00:00:00`
+        );
+
+        if (Number.isNaN(fechaIngresada.getTime())) {
+            return res.status(400).json({
+                mensaje: 'La fecha de devolución no es válida'
+            });
+        }
+
+        const hoy = new Date();
+
+        hoy.setHours(0, 0, 0, 0);
+
+        if (fechaIngresada > hoy) {
+            return res.status(400).json({
+                mensaje: 'La fecha de devolución no puede ser futura'
+            });
+        }
+
+
+        // ====================================================
+        // INICIAR TRANSACCIÓN
+        // ====================================================
+
+        await client.query('BEGIN');
+
+
+        // ====================================================
+        // BUSCAR ASIGNACIÓN
+        // ====================================================
+
+        const resultadoAsignacion = await client.query(
+            `
+            SELECT
+                a.id_asignacion,
+                a.id_equipo,
+                a.id_empleado,
+                a.fecha_asignacion,
+
+                e.codigo_interno,
+                e.nombre AS nombre_equipo,
+                e.id_estado,
+
+                emp.rut,
+                emp.nombres,
+                emp.apellidos
+
+            FROM asignaciones a
+
+            INNER JOIN equipos e
+                ON a.id_equipo = e.id_equipo
+
+            INNER JOIN empleados emp
+                ON a.id_empleado = emp.id_empleado
+
+            WHERE a.id_asignacion = $1
+
+            FOR UPDATE
+            `,
+            [id_asignacion]
+        );
+
+
+        if (resultadoAsignacion.rows.length === 0) {
+
+            await client.query('ROLLBACK');
+
+            return res.status(404).json({
+                mensaje: 'La asignación seleccionada no existe'
+            });
+        }
+
+
+        const asignacion = resultadoAsignacion.rows[0];
+
+
+        // ====================================================
+        // COMPROBAR QUE NO FUE DEVUELTA
+        // ====================================================
+
+        const resultadoDevolucionExistente =
+            await client.query(
+                `
+                SELECT id_devolucion
+                FROM devoluciones
+                WHERE id_asignacion = $1
+                `,
+                [id_asignacion]
+            );
+
+
+        if (resultadoDevolucionExistente.rows.length > 0) {
+
+            await client.query('ROLLBACK');
+
+            return res.status(409).json({
+                mensaje: 'Esta asignación ya fue devuelta'
+            });
+        }
+
+
+        // ====================================================
+        // VALIDAR FECHA CONTRA LA ASIGNACIÓN
+        // ====================================================
+
+        const fechaAsignacion =
+            new Date(asignacion.fecha_asignacion);
+
+        fechaAsignacion.setHours(0, 0, 0, 0);
+
+
+        if (fechaIngresada < fechaAsignacion) {
+
+            await client.query('ROLLBACK');
+
+            return res.status(400).json({
+                mensaje:
+                    'La fecha de devolución no puede ser anterior a la fecha de asignación'
+            });
+        }
+
+
+        // ====================================================
+        // COMPROBAR ESTADO DEL EQUIPO
+        // ====================================================
+
+        // Según estados_equipo:
+        // 1 = Disponible
+        // 2 = Asignado
+        // 3 = En reparación
+        // 4 = Dado de baja
+
+        if (asignacion.id_estado !== 2) {
+
+            await client.query('ROLLBACK');
+
+            return res.status(409).json({
+                mensaje: 'El equipo de esta asignación no se encuentra asignado'
+            });
+        }
+
+
+        // ====================================================
+        // REGISTRAR DEVOLUCIÓN
+        // ====================================================
+
+        const resultadoDevolucion = await client.query(
+            `
+            INSERT INTO devoluciones
+            (
+                id_asignacion,
+                fecha_devolucion,
+                condicion_devolucion,
+                observaciones
+            )
+            VALUES ($1, $2, $3, $4)
+
+            RETURNING
+                id_devolucion,
+                id_asignacion,
+                fecha_devolucion,
+                condicion_devolucion,
+                observaciones
+            `,
+            [
+                id_asignacion,
+                fecha_devolucion,
+                condicion_devolucion.trim(),
+                observaciones?.trim() || null
+            ]
+        );
+
+
+        // ====================================================
+        // DETERMINAR NUEVO ESTADO DEL EQUIPO
+        // ====================================================
+
+        // Buen estado / Con daños:
+        //     vuelve a Disponible.
+        //
+        // Requiere reparación:
+        //     pasa a En reparación.
+
+        const nuevoEstado =
+            condicion_devolucion.trim() ===
+            'Requiere reparación'
+                ? 3
+                : 1;
+
+
+        // ====================================================
+        // ACTUALIZAR EQUIPO
+        // ====================================================
+
+        await client.query(
+            `
+            UPDATE equipos
+            SET id_estado = $1
+            WHERE id_equipo = $2
+            `,
+            [
+                nuevoEstado,
+                asignacion.id_equipo
+            ]
+        );
+
+
+        // ====================================================
+        // CONFIRMAR TRANSACCIÓN
+        // ====================================================
+
+        await client.query('COMMIT');
+
+
+        const devolucion =
+            resultadoDevolucion.rows[0];
+
+
+        // ====================================================
+        // RESPUESTA
+        // ====================================================
+
+        return res.status(201).json({
+
+            mensaje: 'Devolución registrada correctamente',
+
+            devolucion: {
+
+                id_devolucion:
+                    devolucion.id_devolucion,
+
+                id_asignacion:
+                    devolucion.id_asignacion,
+
+                fecha_devolucion:
+                    devolucion.fecha_devolucion,
+
+                condicion_devolucion:
+                    devolucion.condicion_devolucion,
+
+                observaciones:
+                    devolucion.observaciones,
+
+                equipo: {
+
+                    id_equipo:
+                        asignacion.id_equipo,
+
+                    codigo_interno:
+                        asignacion.codigo_interno,
+
+                    nombre:
+                        asignacion.nombre_equipo,
+
+                    nuevo_estado:
+                        nuevoEstado === 3
+                            ? 'En reparación'
+                            : 'Disponible'
+                },
+
+                empleado: {
+
+                    id_empleado:
+                        asignacion.id_empleado,
+
+                    rut:
+                        asignacion.rut,
+
+                    nombres:
+                        asignacion.nombres,
+
+                    apellidos:
+                        asignacion.apellidos
+                }
+            }
+        });
+
+
+    } catch (error) {
+
+        try {
+            await client.query('ROLLBACK');
+        } catch (rollbackError) {
+            console.error(
+                'Error al revertir la transacción:',
+                rollbackError
+            );
+        }
+
+        console.error(
+            'Error al registrar devolución:',
+            error
+        );
+
+        return res.status(500).json({
+            mensaje: 'Error interno al registrar la devolución'
+        });
+
+    } finally {
+
+        client.release();
+
+    }
+
+});
 // PUERTO
 
 // ======================================================

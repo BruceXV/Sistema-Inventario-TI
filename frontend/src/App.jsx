@@ -7,6 +7,8 @@ import DetalleEquipo from './pages/DetalleEquipo.jsx'
 import RegistrarEmpleado from './pages/RegistrarEmpleado.jsx'
 import BuscarEmpleados from './pages/BuscarEmpleados.jsx'
 import DetalleEmpleado from './pages/DetalleEmpleado.jsx'
+import AsignarEquipo from './pages/AsignarEquipo.jsx'
+import RegistrarDevolucion from './pages/RegistrarDevolucion.jsx'
 
 function App() {
   const [autenticado, setAutenticado] = useState(() => Boolean(localStorage.getItem('token')))
@@ -81,12 +83,22 @@ function App() {
     )
   }
 
+  if (pantalla === 'asignar-equipo') {
+    return <AsignarEquipo onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+  }
+
+  if (pantalla === 'registrar-devolucion') {
+    return <RegistrarDevolucion onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+  }
+
   return (
     <MenuPrincipal
       onRegistrarEquipo={() => setPantalla('registrar-equipo')}
       onBuscarEquipos={() => setPantalla('buscar-equipos')}
       onRegistrarEmpleado={() => setPantalla('registrar-empleado')}
       onBuscarEmpleados={() => setPantalla('buscar-empleados')}
+      onAsignarEquipo={() => setPantalla('asignar-equipo')}
+      onRegistrarDevolucion={() => setPantalla('registrar-devolucion')}
       onLogout={cerrarSesion}
     />
   )

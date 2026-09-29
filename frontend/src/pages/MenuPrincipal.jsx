@@ -55,7 +55,7 @@ function obtenerUsuario() {
 // COMPONENTE MENÚ PRINCIPAL
 // ======================================================
 
-function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistrarEmpleado, onBuscarEmpleados }) {
+function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistrarEmpleado, onBuscarEmpleados, onAsignarEquipo, onRegistrarDevolucion }) {
   const usuario = obtenerUsuario()
 
   // Elimina la sesión local y avisa a App para volver inmediatamente al Login.
@@ -114,7 +114,7 @@ function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistr
               className="shortcut-card"
               type="button"
               key={titulo}
-              onClick={indice === 0 ? onRegistrarEquipo : indice === 1 ? onBuscarEquipos : indice === 2 ? onRegistrarEmpleado : indice === 3 ? onBuscarEmpleados : undefined}
+              onClick={indice === 0 ? onRegistrarEquipo : indice === 1 ? onBuscarEquipos : indice === 2 ? onRegistrarEmpleado : indice === 3 ? onBuscarEmpleados : indice === 4 ? onAsignarEquipo : indice === 5 ? onRegistrarDevolucion : undefined}
             >
               <span className="shortcut-icon"><Icono tipo={icono} /></span>
               <span className="shortcut-title">{titulo}<span aria-hidden="true">›</span></span>
