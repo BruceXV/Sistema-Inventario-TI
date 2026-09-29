@@ -5,16 +5,20 @@ import RegistrarEquipo from './pages/RegistrarEquipo.jsx'
 import BuscarEquipos from './pages/BuscarEquipos.jsx'
 import DetalleEquipo from './pages/DetalleEquipo.jsx'
 import RegistrarEmpleado from './pages/RegistrarEmpleado.jsx'
+import BuscarEmpleados from './pages/BuscarEmpleados.jsx'
+import DetalleEmpleado from './pages/DetalleEmpleado.jsx'
 
 function App() {
   const [autenticado, setAutenticado] = useState(() => Boolean(localStorage.getItem('token')))
   const [pantalla, setPantalla] = useState('inicio')
   const [equipoSeleccionado, setEquipoSeleccionado] = useState(null)
+  const [empleadoSeleccionado, setEmpleadoSeleccionado] = useState(null)
 
   const cerrarSesion = () => {
     setAutenticado(false)
     setPantalla('inicio')
     setEquipoSeleccionado(null)
+    setEmpleadoSeleccionado(null)
   }
 
   if (!autenticado) {
@@ -53,11 +57,36 @@ function App() {
     return <RegistrarEmpleado onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
   }
 
+  if (pantalla === 'buscar-empleados') {
+    return (
+      <BuscarEmpleados
+        onInicio={() => setPantalla('inicio')}
+        onVerDetalle={(idEmpleado) => {
+          setEmpleadoSeleccionado(idEmpleado)
+          setPantalla('detalle-empleado')
+        }}
+        onLogout={cerrarSesion}
+      />
+    )
+  }
+
+  if (pantalla === 'detalle-empleado') {
+    return (
+      <DetalleEmpleado
+        idEmpleado={empleadoSeleccionado}
+        onInicio={() => setPantalla('inicio')}
+        onVolver={() => setPantalla('buscar-empleados')}
+        onLogout={cerrarSesion}
+      />
+    )
+  }
+
   return (
     <MenuPrincipal
       onRegistrarEquipo={() => setPantalla('registrar-equipo')}
       onBuscarEquipos={() => setPantalla('buscar-equipos')}
       onRegistrarEmpleado={() => setPantalla('registrar-empleado')}
+      onBuscarEmpleados={() => setPantalla('buscar-empleados')}
       onLogout={cerrarSesion}
     />
   )

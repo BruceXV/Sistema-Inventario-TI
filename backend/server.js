@@ -1391,6 +1391,321 @@ app.get('/api/areas', verificarToken, async (req, res) => {
     }
 
 });
+
+// ============================================================
+// BUSCAR / LISTAR EMPLEADOS
+// ============================================================
+
+// GET http://localhost:3000/api/empleados
+// Esta ruta permite obtener la lista de empleados registrados.
+// También permite buscar y filtrar por área y estado.
+// Está protegida con JWT.
+
+app.get('/api/empleados', verificarToken, async (req, res) => {
+
+    try {
+
+        // Obtener filtros enviados desde la URL
+        const {
+            buscar,
+            id_area,
+            estado
+        } = req.query;
+
+
+        // ====================================================
+        // CONSULTA BASE
+        // ====================================================
+
+        let consulta = `
+            SELECT
+                e.id_empleado,
+                e.rut,
+                e.nombres,
+                e.apellidos,
+                e.correo,
+                e.telefono,
+                e.id_area,
+                a.nombre AS area,
+                e.cargo,
+                e.fecha_ingreso,
+                e.estado
+            FROM empleados e
+            INNER JOIN areas a
+                ON e.id_area = a.id_area
+            WHERE 1 = 1
+        `;
+
+
+        // Valores que se enviarán de forma segura a PostgreSQL
+        const valores = [];
+
+        let numeroParametro = 1;
+
+
+        // ====================================================
+        // FILTRO DE BÚSQUEDA
+        // ====================================================
+
+        // Permite buscar por:
+        // RUT
+        // nombres
+        // apellidos
+        // correo
+
+        if (buscar && buscar.trim() !== '') {
+
+            consulta += `
+                AND (
+                    e.rut ILIKE $${numeroParametro}
+                    OR e.nombres ILIKE $${numeroParametro}
+                    OR e.apellidos ILIKE $${numeroParametro}
+                    OR e.correo ILIKE $${numeroParametro}
+                    OR CONCAT(
+                        e.nombres,
+                        ' ',
+                        e.apellidos
+                    ) ILIKE $${numeroParametro}
+                )
+            `;
+
+            valores.push(
+                `%${buscar.trim()}%`
+            );
+
+            numeroParametro++;
+
+        }
+
+
+        // ====================================================
+        // FILTRO POR ÁREA
+        // ====================================================
+
+        if (
+            id_area &&
+            id_area !== '' &&
+            id_area !== 'todos'
+        ) {
+
+            const areaNumero = Number(id_area);
+
+
+            // Validar que el ID sea un número entero válido
+            if (
+                !Number.isInteger(areaNumero) ||
+                areaNumero <= 0
+            ) {
+
+                return res.status(400).json({
+                    mensaje: 'El área seleccionada no es válida'
+                });
+
+            }
+
+
+            consulta += `
+                AND e.id_area = $${numeroParametro}
+            `;
+
+            valores.push(areaNumero);
+
+            numeroParametro++;
+
+        }
+
+
+        // ====================================================
+        // FILTRO POR ESTADO
+        // ====================================================
+
+        if (
+            estado !== undefined &&
+            estado !== '' &&
+            estado !== 'todos'
+        ) {
+
+            let estadoBooleano;
+
+
+            if (
+                estado === 'true' ||
+                estado === 'activo'
+            ) {
+
+                estadoBooleano = true;
+
+            } else if (
+                estado === 'false' ||
+                estado === 'inactivo'
+            ) {
+
+                estadoBooleano = false;
+
+            } else {
+
+                return res.status(400).json({
+                    mensaje: 'El estado seleccionado no es válido'
+                });
+
+            }
+
+
+            consulta += `
+                AND e.estado = $${numeroParametro}
+            `;
+
+            valores.push(estadoBooleano);
+
+            numeroParametro++;
+
+        }
+
+
+        // ====================================================
+        // ORDENAR RESULTADOS
+        // ====================================================
+
+        consulta += `
+            ORDER BY
+                e.nombres ASC,
+                e.apellidos ASC,
+                e.id_empleado ASC
+        `;
+
+
+        // ====================================================
+        // EJECUTAR CONSULTA
+        // ====================================================
+
+        const resultado = await pool.query(
+            consulta,
+            valores
+        );
+
+
+        // ====================================================
+        // DEVOLVER RESULTADOS
+        // ====================================================
+
+        return res.json(resultado.rows);
+
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener empleados:',
+            error
+        );
+
+
+        return res.status(500).json({
+            mensaje: 'Error interno al obtener los empleados'
+        });
+
+    }
+
+});
+
+// ============================================================
+// OBTENER DETALLE DE UN EMPLEADO
+// ============================================================
+
+// GET http://localhost:3000/api/empleados/:id
+// Esta ruta permite obtener todos los datos de un empleado
+// específico utilizando su ID.
+// Está protegida con JWT.
+
+app.get('/api/empleados/:id', verificarToken, async (req, res) => {
+
+    try {
+
+        // Obtener el ID del empleado desde la URL
+        const { id } = req.params;
+
+        // Convertir el ID recibido a número
+        const idEmpleado = Number(id);
+
+
+        // ====================================================
+        // VALIDAR ID
+        // ====================================================
+
+        // El ID debe ser un número entero mayor que 0
+        if (
+            !Number.isInteger(idEmpleado) ||
+            idEmpleado <= 0
+        ) {
+
+            return res.status(400).json({
+                mensaje: 'El ID del empleado no es válido'
+            });
+
+        }
+
+
+        // ====================================================
+        // BUSCAR EMPLEADO
+        // ====================================================
+
+        const resultado = await pool.query(
+            `
+            SELECT
+                e.id_empleado,
+                e.rut,
+                e.nombres,
+                e.apellidos,
+                e.correo,
+                e.telefono,
+                e.id_area,
+                a.nombre AS area,
+                e.cargo,
+                e.fecha_ingreso,
+                e.estado
+            FROM empleados e
+            INNER JOIN areas a
+                ON e.id_area = a.id_area
+            WHERE e.id_empleado = $1
+            `,
+            [idEmpleado]
+        );
+
+
+        // ====================================================
+        // EMPLEADO NO ENCONTRADO
+        // ====================================================
+
+        if (resultado.rows.length === 0) {
+
+            return res.status(404).json({
+                mensaje: 'Empleado no encontrado'
+            });
+
+        }
+
+
+        // ====================================================
+        // DEVOLVER EMPLEADO
+        // ====================================================
+
+        return res.json(resultado.rows[0]);
+
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener detalle del empleado:',
+            error
+        );
+
+
+        return res.status(500).json({
+            mensaje: 'Error interno al obtener el empleado'
+        });
+
+    }
+
+});
 // PUERTO
 
 // ======================================================

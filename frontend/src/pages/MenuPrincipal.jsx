@@ -35,6 +35,7 @@ const tarjetas = [
   ['equipos', 'Registrar equipo', 'Agrega un nuevo equipo al inventario con sus detalles.'],
   ['buscar', 'Buscar equipos', 'Busca y consulta equipos por nombre, tipo, estado o número de serie.'],
   ['empleados', 'Registrar empleado', 'Registra nuevos empleados y gestiona su información en el sistema.'],
+  ['buscar', 'Buscar empleados', 'Busca y consulta empleados por RUT, nombre, correo, área o estado.'],
   ['asignaciones', 'Asignar equipo', 'Asigna un equipo a un empleado responsable y registra la asignación.'],
   ['devoluciones', 'Registrar devolución', 'Registra la devolución de un equipo y actualiza su estado en el inventario.'],
   ['historial', 'Consultar historial', 'Consulta el historial completo de asignaciones y devoluciones de equipos.'],
@@ -54,7 +55,7 @@ function obtenerUsuario() {
 // COMPONENTE MENÚ PRINCIPAL
 // ======================================================
 
-function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistrarEmpleado }) {
+function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistrarEmpleado, onBuscarEmpleados }) {
   const usuario = obtenerUsuario()
 
   // Elimina la sesión local y avisa a App para volver inmediatamente al Login.
@@ -107,13 +108,13 @@ function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistr
 
       <main className="dashboard-main">
         <section className="shortcut-grid" aria-label="Accesos del sistema">
-          {/* Las dos primeras tarjetas notifican a App para cambiar de pantalla sin recargar. */}
+          {/* Las tarjetas habilitadas notifican a App para cambiar de pantalla sin recargar. */}
           {tarjetas.map(([icono, titulo, descripcion], indice) => (
             <button
               className="shortcut-card"
               type="button"
               key={titulo}
-              onClick={indice === 0 ? onRegistrarEquipo : indice === 1 ? onBuscarEquipos : indice === 2 ? onRegistrarEmpleado : undefined}
+              onClick={indice === 0 ? onRegistrarEquipo : indice === 1 ? onBuscarEquipos : indice === 2 ? onRegistrarEmpleado : indice === 3 ? onBuscarEmpleados : undefined}
             >
               <span className="shortcut-icon"><Icono tipo={icono} /></span>
               <span className="shortcut-title">{titulo}<span aria-hidden="true">›</span></span>
