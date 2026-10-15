@@ -3,6 +3,7 @@
 // ======================================================
 
 import { useEffect, useState } from 'react'
+import Sidebar from '../components/Sidebar.jsx'
 
 // ======================================================
 // COMPONENTES Y DATOS AUXILIARES
@@ -76,7 +77,7 @@ function normalizarTelefono(telefono) {
 // COMPONENTE REGISTRAR EMPLEADO
 // ======================================================
 
-function RegistrarEmpleado({ onInicio, onLogout }) {
+function RegistrarEmpleado({ onInicio, onNavigate, onLogout }) {
   const usuario = obtenerUsuario()
   const [formulario, setFormulario] = useState(formularioInicial)
   const [errores, setErrores] = useState({})
@@ -251,27 +252,7 @@ function RegistrarEmpleado({ onInicio, onLogout }) {
 
   return (
     <div className="dashboard">
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <div className="sidebar-logo"><Icono tipo="equipos" /></div>
-          <div><strong>Inventario TI</strong><p>Sistema de gestión de equipos de tecnología</p></div>
-        </div>
-        <nav className="sidebar-nav" aria-label="Navegación principal">
-          {opciones.map(([icono, texto]) => (
-            <button className={texto === 'Empleados' ? 'active' : ''} type="button" key={texto} onClick={texto === 'Inicio' ? onInicio : undefined}>
-              <Icono tipo={icono} /><span>{texto}</span>
-              {texto !== 'Inicio' && <span className="nav-arrow">›</span>}
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-account">
-          <div className="account-info">
-            <span className="account-avatar"><Icono tipo="administradores" /></span>
-            <div><strong>{usuario.nombre || 'Administrador'}</strong><small>{usuario.correo || ''}</small></div>
-          </div>
-          <button className="logout-button" type="button" onClick={cerrarSesion}><Icono tipo="salir" />Cerrar sesión</button>
-        </div>
-      </aside>
+      <Sidebar seccionActiva="Empleados" usuario={usuario} onInicio={onInicio} onNavigate={onNavigate} onLogout={cerrarSesion} />
 
       <main className="dashboard-main equipment-page">
         <section className="equipment-form-card" aria-labelledby="employee-form-title">

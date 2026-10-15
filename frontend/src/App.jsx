@@ -30,13 +30,14 @@ function App() {
   }
 
   if (pantalla === 'registrar-equipo') {
-    return <RegistrarEquipo onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+    return <RegistrarEquipo onInicio={() => setPantalla('inicio')} onNavigate={setPantalla} onLogout={cerrarSesion} />
   }
 
   if (pantalla === 'buscar-equipos') {
     return (
       <BuscarEquipos
         onInicio={() => setPantalla('inicio')}
+        onNavigate={setPantalla}
         onVerDetalle={(idEquipo) => {
           setEquipoSeleccionado(idEquipo)
           setPantalla('detalle-equipo')
@@ -51,6 +52,7 @@ function App() {
       <DetalleEquipo
         idEquipo={equipoSeleccionado}
         onInicio={() => setPantalla('inicio')}
+        onNavigate={setPantalla}
         onVolver={() => setPantalla('buscar-equipos')}
         onLogout={cerrarSesion}
       />
@@ -58,13 +60,14 @@ function App() {
   }
 
   if (pantalla === 'registrar-empleado') {
-    return <RegistrarEmpleado onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+    return <RegistrarEmpleado onInicio={() => setPantalla('inicio')} onNavigate={setPantalla} onLogout={cerrarSesion} />
   }
 
   if (pantalla === 'buscar-empleados') {
     return (
       <BuscarEmpleados
         onInicio={() => setPantalla('inicio')}
+        onNavigate={setPantalla}
         onVerDetalle={(idEmpleado) => {
           setEmpleadoSeleccionado(idEmpleado)
           setPantalla('detalle-empleado')
@@ -79,6 +82,7 @@ function App() {
       <DetalleEmpleado
         idEmpleado={empleadoSeleccionado}
         onInicio={() => setPantalla('inicio')}
+        onNavigate={setPantalla}
         onVolver={() => setPantalla('buscar-empleados')}
         onLogout={cerrarSesion}
       />
@@ -86,29 +90,23 @@ function App() {
   }
 
   if (pantalla === 'asignar-equipo') {
-    return <AsignarEquipo onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+    return <AsignarEquipo onInicio={() => setPantalla('inicio')} onNavigate={setPantalla} onLogout={cerrarSesion} />
   }
 
   if (pantalla === 'registrar-devolucion') {
-    return <RegistrarDevolucion onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+    return <RegistrarDevolucion onInicio={() => setPantalla('inicio')} onNavigate={setPantalla} onLogout={cerrarSesion} />
   }
 
   if (pantalla === 'consultar-historial') {
-    return <ConsultarHistorial onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+    return <ConsultarHistorial onInicio={() => setPantalla('inicio')} onNavigate={setPantalla} onLogout={cerrarSesion} />
   }
 
   if (pantalla === 'administradores') {
-    return <Administradores onInicio={() => setPantalla('inicio')} onLogout={cerrarSesion} />
+    return <Administradores onInicio={() => setPantalla('inicio')} onNavigate={setPantalla} onLogout={cerrarSesion} />
   }
 
   return (
     <MenuPrincipal
-      onRegistrarEquipo={() => setPantalla('registrar-equipo')}
-      onBuscarEquipos={() => setPantalla('buscar-equipos')}
-      onRegistrarEmpleado={() => setPantalla('registrar-empleado')}
-      onBuscarEmpleados={() => setPantalla('buscar-empleados')}
-      onAsignarEquipo={() => setPantalla('asignar-equipo')}
-      onRegistrarDevolucion={() => setPantalla('registrar-devolucion')}
       onNavigate={setPantalla}
       onLogout={cerrarSesion}
     />

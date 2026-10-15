@@ -4,6 +4,7 @@
 
 // useState conserva los equipos y mensajes; useEffect ejecuta la carga inicial.
 import { useEffect, useState } from 'react'
+import Sidebar from '../components/Sidebar.jsx'
 
 // ======================================================
 // COMPONENTES Y DATOS AUXILIARES
@@ -49,7 +50,7 @@ function obtenerUsuario() {
 // COMPONENTE BUSCAR EQUIPOS
 // ======================================================
 
-function BuscarEquipos({ onInicio, onLogout, onVerDetalle }) {
+function BuscarEquipos({ onInicio, onNavigate, onLogout, onVerDetalle }) {
   const usuario = obtenerUsuario()
 
   // Separamos el inventario completo de los registros que muestra la tabla.
@@ -204,45 +205,7 @@ function BuscarEquipos({ onInicio, onLogout, onVerDetalle }) {
 
   return (
     <div className="dashboard">
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <div className="sidebar-logo"><Icono tipo="equipos" /></div>
-          <div>
-            <strong>Inventario TI</strong>
-            <p>Sistema de gestión de equipos de tecnología</p>
-          </div>
-        </div>
-
-        {/* Equipos se marca como opción activa; Inicio permite regresar al menú. */}
-        <nav className="sidebar-nav" aria-label="Navegación principal">
-          {opciones.map(([icono, texto]) => (
-            <button
-              className={texto === 'Equipos' ? 'active' : ''}
-              type="button"
-              key={texto}
-              onClick={texto === 'Inicio' ? onInicio : undefined}
-            >
-              <Icono tipo={icono} />
-              <span>{texto}</span>
-              {texto !== 'Inicio' && <span className="nav-arrow">›</span>}
-            </button>
-          ))}
-        </nav>
-
-        <div className="sidebar-account">
-          <div className="account-info">
-            <span className="account-avatar"><Icono tipo="administradores" /></span>
-            <div>
-              <strong>{usuario.nombre || 'Administrador'}</strong>
-              <small>{usuario.correo || ''}</small>
-            </div>
-          </div>
-          <button className="logout-button" type="button" onClick={cerrarSesion}>
-            <Icono tipo="salir" />
-            Cerrar sesión
-          </button>
-        </div>
-      </aside>
+      <Sidebar seccionActiva="Equipos" usuario={usuario} onInicio={onInicio} onNavigate={onNavigate} onLogout={cerrarSesion} />
 
       <main className="dashboard-main search-equipment-page">
         <div className="search-equipment-content">

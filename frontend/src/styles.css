@@ -491,6 +491,38 @@ button {
   margin-left: auto;
   font-size: 1.65rem;
   font-weight: 400;
+  transition: transform 160ms ease;
+}
+
+.nav-arrow.open {
+  transform: rotate(90deg);
+}
+
+.sidebar-nav-group {
+  display: grid;
+  gap: 4px;
+}
+
+.sidebar-submenu {
+  display: grid;
+  gap: 3px;
+  padding: 0 8px 3px 54px;
+}
+
+.sidebar-submenu button {
+  height: auto;
+  min-height: 34px;
+  padding: 7px 10px;
+  color: #d9e8fa;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-weight: 550;
+}
+
+.sidebar-submenu button:hover,
+.sidebar-submenu button:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.09);
 }
 
 .sidebar-account {
@@ -628,6 +660,224 @@ button {
   border-top: 1px solid #d8e1ed;
   font-size: 0.82rem;
   text-align: center;
+}
+
+/* ======================================================
+   MENÚ PRINCIPAL SIN SIDEBAR
+   ====================================================== */
+
+.main-menu-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  color: #0b1e40;
+  background: #f4f7fb;
+}
+
+.main-menu-header {
+  min-height: 84px;
+  padding: 14px max(28px, calc((100% - 1340px) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  background: #fff;
+  border-bottom: 1px solid #dce5f0;
+  box-shadow: 0 4px 18px rgba(25, 52, 89, 0.05);
+}
+
+.main-menu-brand,
+.main-menu-account,
+.main-menu-user {
+  display: flex;
+  align-items: center;
+}
+
+.main-menu-brand {
+  gap: 13px;
+}
+
+.main-menu-logo {
+  width: 45px;
+  height: 45px;
+  flex: 0 0 45px;
+  color: #1464e8;
+}
+
+.main-menu-brand svg,
+.main-menu-avatar svg,
+.main-menu-logout svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.main-menu-brand strong {
+  display: block;
+  font-size: 1.3rem;
+}
+
+.main-menu-brand p {
+  margin: 4px 0 0;
+  color: #657895;
+  font-size: 0.76rem;
+}
+
+.main-menu-account {
+  gap: 18px;
+}
+
+.main-menu-user {
+  min-width: 0;
+  gap: 10px;
+}
+
+.main-menu-avatar {
+  width: 38px;
+  height: 38px;
+  padding: 7px;
+  flex: 0 0 38px;
+  color: #1260df;
+  background: #edf4ff;
+  border-radius: 50%;
+}
+
+.main-menu-user div {
+  min-width: 0;
+}
+
+.main-menu-user strong,
+.main-menu-user small {
+  display: block;
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main-menu-user strong {
+  font-size: 0.9rem;
+}
+
+.main-menu-user small {
+  margin-top: 3px;
+  color: #657895;
+  font-size: 0.72rem;
+}
+
+.main-menu-logout {
+  height: 42px;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #294767;
+  background: #fff;
+  border: 1px solid #c8d4e3;
+  border-radius: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.main-menu-logout:hover {
+  color: #1260df;
+  background: #f3f7fc;
+  border-color: #aebfd4;
+}
+
+.main-menu-logout svg {
+  width: 21px;
+  height: 21px;
+}
+
+.main-menu-content {
+  width: 100%;
+  flex: 1;
+  padding: 36px 28px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-menu-content .shortcut-grid {
+  max-width: 1340px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.main-menu-content .shortcut-card {
+  min-height: 270px;
+}
+
+.main-menu-content .dashboard-footer {
+  max-width: 1340px;
+}
+
+@media (max-width: 1100px) {
+  .main-menu-content .shortcut-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .main-menu-header {
+    align-items: flex-start;
+  }
+
+  .main-menu-brand p {
+    display: none;
+  }
+
+  .main-menu-account {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .main-menu-content .shortcut-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .main-menu-header {
+    padding: 14px 16px;
+    align-items: center;
+  }
+
+  .main-menu-brand strong {
+    font-size: 1.05rem;
+  }
+
+  .main-menu-logo {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .main-menu-user {
+    display: none;
+  }
+
+  .main-menu-logout {
+    padding-inline: 11px;
+    font-size: 0.82rem;
+  }
+
+  .main-menu-content {
+    padding: 24px 16px 18px;
+  }
+
+  .main-menu-content .shortcut-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .main-menu-content .shortcut-card {
+    min-height: 230px;
+  }
 }
 
 @media (max-height: 820px) and (min-width: 651px) {
