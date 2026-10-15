@@ -3,7 +3,7 @@
 // ======================================================
 
 // useState controla formulario y mensajes; useEffect carga los catálogos iniciales.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 
 // ======================================================
@@ -35,6 +35,129 @@ const opciones = [
   ['historial', 'Historial'],
   ['administradores', 'Administradores'],
 ]
+
+// Desplegable accesible que limita visualmente el catálogo a diez filas.
+// Todos los tipos permanecen disponibles mediante desplazamiento vertical.
+function SelectorTipoEquipo({ tipos, value, onChange, disabled, invalido }) {
+  const [abierto, setAbierto] = useState(false)
+  const [indiceActivo, setIndiceActivo] = useState(0)
+  const contenedorRef = useRef(null)
+  const botonRef = useRef(null)
+  const opcionesRef = useRef([])
+
+  // Ordena únicamente la presentación: "Otro" permanece arriba y los tipos
+  // restantes se muestran alfabéticamente sin alterar sus identificadores.
+  const tiposOrdenados = [...tipos].sort((tipoA, tipoB) => {
+    const nombreA = tipoA.nombre.trim()
+    const nombreB = tipoB.nombre.trim()
+    const esOtroA = nombreA.toLocaleLowerCase('es') === 'otro'
+    const esOtroB = nombreB.toLocaleLowerCase('es') === 'otro'
+
+    if (esOtroA !== esOtroB) return esOtroA ? -1 : 1
+    return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' })
+  })
+  const opcionesSelector = [{ id_tipo: '', nombre: 'Selecciona un tipo' }, ...tiposOrdenados]
+  const tipoSeleccionado = tipos.find((tipo) => String(tipo.id_tipo) === value)
+  const obtenerNombreVisible = (tipo) => tipo?.nombre.trim().toLocaleLowerCase('es') === 'otro'
+    ? 'Agregar nuevo tipo'
+    : tipo?.nombre
+
+  useEffect(() => {
+    const cerrarAlHacerClickFuera = (event) => {
+      if (!contenedorRef.current?.contains(event.target)) setAbierto(false)
+    }
+
+    document.addEventListener('mousedown', cerrarAlHacerClickFuera)
+    return () => document.removeEventListener('mousedown', cerrarAlHacerClickFuera)
+  }, [])
+
+  useEffect(() => {
+    if (!abierto) return
+    const indiceSeleccionado = opcionesSelector.findIndex((tipo) => String(tipo.id_tipo) === value)
+    const siguienteIndice = indiceSeleccionado >= 0 ? indiceSeleccionado : 0
+    setIndiceActivo(siguienteIndice)
+    requestAnimationFrame(() => opcionesRef.current[siguienteIndice]?.focus())
+  }, [abierto, tipos, value])
+
+  const seleccionar = (tipo) => {
+    onChange(String(tipo.id_tipo))
+    setAbierto(false)
+    requestAnimationFrame(() => botonRef.current?.focus())
+  }
+
+  const manejarTeclaBoton = (event) => {
+    if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
+      event.preventDefault()
+      setAbierto(true)
+    }
+  }
+
+  const manejarTeclaOpcion = (event, indice) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      const movimiento = event.key === 'ArrowDown' ? 1 : -1
+      const siguiente = (indice + movimiento + opcionesSelector.length) % opcionesSelector.length
+      setIndiceActivo(siguiente)
+      opcionesRef.current[siguiente]?.focus()
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault()
+      const siguiente = event.key === 'Home' ? 0 : opcionesSelector.length - 1
+      setIndiceActivo(siguiente)
+      opcionesRef.current[siguiente]?.focus()
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      seleccionar(opcionesSelector[indice])
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      setAbierto(false)
+      botonRef.current?.focus()
+    } else if (event.key === 'Tab') {
+      setAbierto(false)
+    }
+  }
+
+  return (
+    <div className="equipment-type-select" ref={contenedorRef}>
+      <button
+        id="tipo-equipo"
+        ref={botonRef}
+        className={`equipment-type-select-trigger ${invalido ? 'field-control--error' : ''}`}
+        type="button"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={abierto}
+        aria-controls="tipo-equipo-opciones"
+        aria-invalid={invalido}
+        disabled={disabled}
+        onClick={() => setAbierto((actual) => !actual)}
+        onKeyDown={manejarTeclaBoton}
+      >
+        <span className={tipoSeleccionado ? '' : 'placeholder'}>{obtenerNombreVisible(tipoSeleccionado) || 'Selecciona un tipo'}</span>
+        <span className={`equipment-type-select-arrow ${abierto ? 'open' : ''}`} aria-hidden="true">⌄</span>
+      </button>
+
+      {abierto && opcionesSelector.length > 0 && (
+        <div id="tipo-equipo-opciones" className="equipment-type-select-menu" role="listbox" aria-label="Tipo de equipo">
+          {opcionesSelector.map((tipo, indice) => (
+            <button
+              ref={(elemento) => { opcionesRef.current[indice] = elemento }}
+              className={indice === indiceActivo ? 'active' : ''}
+              type="button"
+              role="option"
+              aria-selected={String(tipo.id_tipo) === value}
+              tabIndex={indice === indiceActivo ? 0 : -1}
+              key={tipo.id_tipo || 'seleccion-inicial'}
+              onClick={() => seleccionar(tipo)}
+              onKeyDown={(event) => manejarTeclaOpcion(event, indice)}
+            >
+              {obtenerNombreVisible(tipo)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // Proporciona una única estructura para iniciar y limpiar el formulario.
 const formularioInicial = {
@@ -75,6 +198,9 @@ function RegistrarEquipo({ onInicio, onNavigate, onLogout }) {
   // Controlan el envío para evitar duplicados y mostrar el resultado del backend.
   const [enviando, setEnviando] = useState(false)
   const [mensajeRegistro, setMensajeRegistro] = useState(null)
+  const [modalExitoAbierto, setModalExitoAbierto] = useState(false)
+  const botonAceptarRef = useRef(null)
+  const botonRegistrarRef = useRef(null)
 
   // Genera la fecha local actual para limitar y validar la fecha de compra.
   const hoy = (() => {
@@ -128,6 +254,12 @@ function RegistrarEquipo({ onInicio, onNavigate, onLogout }) {
 
     return () => controlador.abort()
   }, [])
+
+  // Al abrir el modal, mueve el foco a su acción principal para facilitar
+  // el uso mediante teclado y lectores de pantalla.
+  useEffect(() => {
+    if (modalExitoAbierto) botonAceptarRef.current?.focus()
+  }, [modalExitoAbierto])
 
   // ======================================================
   // SESIÓN Y NAVEGACIÓN
@@ -265,7 +397,8 @@ function RegistrarEquipo({ onInicio, onNavigate, onLogout }) {
         // Tras registrar, limpiamos los campos pero conservamos los catálogos ya cargados.
         setFormulario(formularioInicial)
         setErrores({})
-        setMensajeRegistro({ tipo: 'exito', texto: 'Equipo registrado correctamente' })
+        setMensajeRegistro(null)
+        setModalExitoAbierto(true)
       } else if (respuesta.status === 409 && data.mensaje === 'Ya existe un equipo con ese código interno') {
         setMensajeRegistro({ tipo: 'error', texto: 'Ya existe un equipo con ese código interno' })
       } else if (respuesta.status === 409 && data.mensaje === 'Ya existe un equipo con ese número de serie') {
@@ -284,7 +417,59 @@ function RegistrarEquipo({ onInicio, onNavigate, onLogout }) {
     }
   }
 
+  const cerrarModalExito = () => {
+    setModalExitoAbierto(false)
+    requestAnimationFrame(() => botonRegistrarRef.current?.focus())
+  }
+
+  const irABuscarEquipos = () => {
+    setModalExitoAbierto(false)
+    onNavigate('buscar-equipos')
+  }
+
+  // Escape cierra el diálogo y Tab mantiene el foco dentro de sus acciones.
+  const manejarTecladoModal = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      cerrarModalExito()
+      return
+    }
+
+    if (event.key !== 'Tab') return
+    const botones = event.currentTarget.querySelectorAll('button:not(:disabled)')
+    const primero = botones[0]
+    const ultimo = botones[botones.length - 1]
+
+    if (event.shiftKey && document.activeElement === primero) {
+      event.preventDefault()
+      ultimo?.focus()
+    } else if (!event.shiftKey && document.activeElement === ultimo) {
+      event.preventDefault()
+      primero?.focus()
+    }
+  }
+
   const claseCampo = (nombre) => errores[nombre] ? 'field-control--error' : ''
+  const tipoSeleccionadoActual = tiposEquipo.find((tipo) => String(tipo.id_tipo) === formulario.tipoEquipo)
+  const tipoEquipoValido = Boolean(tipoSeleccionadoActual)
+  const esTipoOtro = tipoSeleccionadoActual?.nombre.trim().toLowerCase() === 'otro'
+
+  const campoTipoEquipo = (
+    <div className={`equipment-field ${tipoEquipoValido ? '' : 'equipment-field--initial-type'}`}>
+      <label htmlFor="tipo-equipo">Tipo de equipo <span>*</span></label>
+      <SelectorTipoEquipo
+        tipos={tiposEquipo}
+        value={formulario.tipoEquipo}
+        disabled={cargandoCatalogos}
+        invalido={Boolean(errores.tipoEquipo)}
+        onChange={(value) => cambiarCampo({ target: { name: 'tipoEquipo', value } })}
+      />
+      {errores.tipoEquipo && <small className="field-error">{errores.tipoEquipo}</small>}
+      {!tipoEquipoValido && (
+        <small className="equipment-type-help">Selecciona una opción para continuar con el registro</small>
+      )}
+    </div>
+  )
 
   // ======================================================
   // RENDERIZADO DE LA PANTALLA
@@ -295,46 +480,39 @@ function RegistrarEquipo({ onInicio, onNavigate, onLogout }) {
       <Sidebar seccionActiva="Equipos" usuario={usuario} onInicio={onInicio} onNavigate={onNavigate} onLogout={cerrarSesion} />
 
       <main className="dashboard-main equipment-page">
-        <section className="equipment-form-card" aria-labelledby="equipment-form-title">
+        <section className="equipment-form-card equipment-form-card--progressive" aria-labelledby="equipment-form-title">
           <header className="equipment-form-header">
             <h1 id="equipment-form-title">Registrar equipo</h1>
           </header>
 
           {/* noValidate permite mostrar mensajes propios y mantener una experiencia consistente. */}
           <form className="equipment-form" onSubmit={enviarFormulario} noValidate>
-            <div className="equipment-field">
-              <label htmlFor="codigo-interno">Código interno <span>*</span></label>
-              <input id="codigo-interno" name="codigoInterno" type="text" maxLength="30" value={formulario.codigoInterno} onChange={cambiarCampo} className={claseCampo('codigoInterno')} aria-invalid={Boolean(errores.codigoInterno)} />
-              {errores.codigoInterno && <small className="field-error">{errores.codigoInterno}</small>}
-            </div>
+            {tipoEquipoValido ? (
+              <>
+              {campoTipoEquipo}
             <div className="equipment-field">
               <label htmlFor="nombre-equipo">Nombre del equipo <span>*</span></label>
               <input id="nombre-equipo" name="nombreEquipo" type="text" maxLength="100" value={formulario.nombreEquipo} onChange={cambiarCampo} className={claseCampo('nombreEquipo')} aria-invalid={Boolean(errores.nombreEquipo)} />
               {errores.nombreEquipo && <small className="field-error">{errores.nombreEquipo}</small>}
             </div>
+              <div className="equipment-field">
+                <label htmlFor="codigo-interno">Código interno <span>*</span></label>
+                <input id="codigo-interno" name="codigoInterno" type="text" maxLength="30" value={formulario.codigoInterno} onChange={cambiarCampo} className={claseCampo('codigoInterno')} aria-invalid={Boolean(errores.codigoInterno)} />
+                {errores.codigoInterno && <small className="field-error">{errores.codigoInterno}</small>}
+              </div>
             <div className="equipment-field">
-              <label htmlFor="tipo-equipo">Tipo de equipo <span>*</span></label>
-              <select id="tipo-equipo" name="tipoEquipo" value={formulario.tipoEquipo} onChange={cambiarCampo} disabled={cargandoCatalogos} className={claseCampo('tipoEquipo')} aria-invalid={Boolean(errores.tipoEquipo)}>
-                <option value="" disabled>Selecciona un tipo</option>
-                {tiposEquipo.map((tipo) => (
-                  <option value={tipo.id_tipo} key={tipo.id_tipo}>{tipo.nombre}</option>
-                ))}
-              </select>
-              {errores.tipoEquipo && <small className="field-error">{errores.tipoEquipo}</small>}
+              <label htmlFor="marca">Marca <span>*</span></label>
+              <input id="marca" name="marca" type="text" maxLength="80" value={formulario.marca} onChange={cambiarCampo} className={claseCampo('marca')} aria-invalid={Boolean(errores.marca)} />
+              {errores.marca && <small className="field-error">{errores.marca}</small>}
             </div>
             {/* El tipo personalizado aparece únicamente al seleccionar la opción "Otro" del catálogo. */}
-            {tiposEquipo.find((tipo) => String(tipo.id_tipo) === formulario.tipoEquipo)?.nombre.trim().toLowerCase() === 'otro' && (
+            {esTipoOtro && (
               <div className="equipment-field">
                 <label htmlFor="tipo-personalizado">Especificar tipo de equipo <span>*</span></label>
                 <input id="tipo-personalizado" name="tipoPersonalizado" type="text" maxLength="80" value={formulario.tipoPersonalizado} onChange={cambiarCampo} className={claseCampo('tipoPersonalizado')} aria-invalid={Boolean(errores.tipoPersonalizado)} />
                 {errores.tipoPersonalizado && <small className="field-error">{errores.tipoPersonalizado}</small>}
               </div>
             )}
-            <div className="equipment-field">
-              <label htmlFor="marca">Marca <span>*</span></label>
-              <input id="marca" name="marca" type="text" maxLength="80" value={formulario.marca} onChange={cambiarCampo} className={claseCampo('marca')} aria-invalid={Boolean(errores.marca)} />
-              {errores.marca && <small className="field-error">{errores.marca}</small>}
-            </div>
             <div className="equipment-field">
               <label htmlFor="estado">Estado <span>*</span></label>
               <select id="estado" name="estado" value={formulario.estado} onChange={cambiarCampo} disabled={cargandoCatalogos} className={claseCampo('estado')} aria-invalid={Boolean(errores.estado)}>
@@ -378,12 +556,6 @@ function RegistrarEquipo({ onInicio, onNavigate, onLogout }) {
               {errores.observaciones && <small className="field-error">{errores.observaciones}</small>}
             </div>
 
-            {errorCatalogos && (
-              <p className="catalog-error equipment-field--full" role="alert">
-                No se pudieron cargar los datos del formulario
-              </p>
-            )}
-
             {mensajeRegistro && (
               <p
                 className={`form-submit-message form-submit-message--${mensajeRegistro.tipo} equipment-field--full`}
@@ -395,13 +567,50 @@ function RegistrarEquipo({ onInicio, onNavigate, onLogout }) {
 
             <div className="equipment-actions equipment-field--full">
               <button className="secondary-button" type="button" onClick={onInicio}>Cancelar</button>
-              <button className="primary-button" type="submit" disabled={enviando}>
+              <button ref={botonRegistrarRef} className="primary-button" type="submit" disabled={enviando}>
                 {enviando ? 'Registrando equipo...' : 'Registrar equipo'}
               </button>
             </div>
+              </>
+            ) : (
+              <>
+                <p className="equipment-initial-instruction equipment-field--full">
+                  Selecciona el tipo de equipo que deseas registrar
+                </p>
+                {campoTipoEquipo}
+              </>
+            )}
+            {errorCatalogos && (
+              <p className="catalog-error equipment-field--full" role="alert">
+                No se pudieron cargar los datos del formulario
+              </p>
+            )}
           </form>
         </section>
       </main>
+
+      {modalExitoAbierto && (
+        <div className="confirmation-modal-backdrop">
+          <section
+            className="confirmation-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="equipment-success-title"
+            aria-describedby="equipment-success-description"
+            onKeyDown={manejarTecladoModal}
+          >
+            <span className="confirmation-modal-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg>
+            </span>
+            <h2 id="equipment-success-title">¡Equipo registrado!</h2>
+            <p id="equipment-success-description">El equipo se ha guardado correctamente en el inventario.</p>
+            <div className="confirmation-modal-actions">
+              <button ref={botonAceptarRef} className="primary-button" type="button" onClick={cerrarModalExito}>Aceptar</button>
+              <button className="secondary-button" type="button" onClick={irABuscarEquipos}>Ir a buscar equipos</button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
