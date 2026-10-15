@@ -2704,6 +2704,819 @@ app.post('/api/devoluciones', verificarToken, async (req, res) => {
     }
 
 });
+
+// ============================================================
+// CONSULTAR HISTORIAL DE ASIGNACIONES Y DEVOLUCIONES
+// ============================================================
+
+// GET http://localhost:3000/api/historial
+//
+// Obtiene el historial de asignaciones del sistema.
+// Una asignación puede estar:
+// - Activa: todavía no tiene devolución.
+// - Devuelta: ya tiene una devolución registrada.
+//
+// También permite filtrar mediante:
+// ?buscar=texto
+// ?estado=activa
+// ?estado=devuelta
+//
+// Ejemplo:
+// GET /api/historial?buscar=EQ-001&estado=devuelta
+
+app.get('/api/historial', verificarToken, async (req, res) => {
+
+    try {
+
+        // ====================================================
+        // OBTENER FILTROS
+        // ====================================================
+
+        const {
+            buscar,
+            estado
+        } = req.query;
+
+
+        // ====================================================
+        // CONSULTA BASE
+        // ====================================================
+
+        let consulta = `
+            SELECT
+                a.id_asignacion,
+                a.fecha_asignacion,
+                a.observaciones AS observaciones_asignacion,
+
+                e.id_equipo,
+                e.codigo_interno,
+                e.nombre AS nombre_equipo,
+                e.marca,
+                e.modelo,
+                e.serial,
+
+                emp.id_empleado,
+                emp.rut,
+                emp.nombres,
+                emp.apellidos,
+                emp.correo,
+
+                d.id_devolucion,
+                d.fecha_devolucion,
+                d.condicion_devolucion,
+                d.observaciones AS observaciones_devolucion
+
+            FROM asignaciones a
+
+            INNER JOIN equipos e
+                ON a.id_equipo = e.id_equipo
+
+            INNER JOIN empleados emp
+                ON a.id_empleado = emp.id_empleado
+
+            LEFT JOIN devoluciones d
+                ON a.id_asignacion = d.id_asignacion
+
+            WHERE 1 = 1
+        `;
+
+
+        // ====================================================
+        // PARÁMETROS DE LA CONSULTA
+        // ====================================================
+
+        const valores = [];
+
+        let contador = 1;
+
+
+        // ====================================================
+        // FILTRO DE BÚSQUEDA GENERAL
+        // ====================================================
+
+        // Permite buscar por:
+        // - Código interno del equipo
+        // - Nombre del equipo
+        // - Serial
+        // - RUT del empleado
+        // - Nombres del empleado
+        // - Apellidos del empleado
+        // - Correo del empleado
+
+        if (
+            buscar !== undefined &&
+            buscar !== null &&
+            buscar.trim() !== ''
+        ) {
+
+            consulta += `
+                AND (
+                    e.codigo_interno ILIKE $${contador}
+                    OR e.nombre ILIKE $${contador}
+                    OR COALESCE(e.serial, '') ILIKE $${contador}
+                    OR emp.rut ILIKE $${contador}
+                    OR emp.nombres ILIKE $${contador}
+                    OR emp.apellidos ILIKE $${contador}
+                    OR emp.correo ILIKE $${contador}
+                    OR CONCAT(
+                        emp.nombres,
+                        ' ',
+                        emp.apellidos
+                    ) ILIKE $${contador}
+                )
+            `;
+
+            valores.push(
+                `%${buscar.trim()}%`
+            );
+
+            contador++;
+        }
+
+
+        // ====================================================
+        // FILTRO POR ESTADO
+        // ====================================================
+
+        if (
+            estado !== undefined &&
+            estado !== null &&
+            estado !== ''
+        ) {
+
+            const estadoNormalizado =
+                estado.toLowerCase();
+
+
+            if (estadoNormalizado === 'activa') {
+
+                consulta += `
+                    AND d.id_devolucion IS NULL
+                `;
+
+            } else if (
+                estadoNormalizado === 'devuelta'
+            ) {
+
+                consulta += `
+                    AND d.id_devolucion IS NOT NULL
+                `;
+
+            } else if (
+                estadoNormalizado !== 'todas'
+            ) {
+
+                return res.status(400).json({
+                    mensaje:
+                        'El estado del historial no es válido'
+                });
+
+            }
+
+        }
+
+
+        // ====================================================
+        // ORDENAR HISTORIAL
+        // ====================================================
+
+        // Primero se muestran las asignaciones más recientes.
+
+        consulta += `
+            ORDER BY
+                a.fecha_asignacion DESC,
+                a.id_asignacion DESC
+        `;
+
+
+        // ====================================================
+        // EJECUTAR CONSULTA
+        // ====================================================
+
+        const resultado =
+            await pool.query(
+                consulta,
+                valores
+            );
+
+
+        // ====================================================
+        // FORMATEAR RESPUESTA
+        // ====================================================
+
+        const historial =
+            resultado.rows.map((fila) => {
+
+                const fueDevuelto =
+                    fila.id_devolucion !== null;
+
+
+                return {
+
+                    id_asignacion:
+                        fila.id_asignacion,
+
+                    estado:
+                        fueDevuelto
+                            ? 'Devuelta'
+                            : 'Activa',
+
+                    asignacion: {
+
+                        fecha:
+                            fila.fecha_asignacion,
+
+                        observaciones:
+                            fila.observaciones_asignacion
+
+                    },
+
+                    equipo: {
+
+                        id_equipo:
+                            fila.id_equipo,
+
+                        codigo_interno:
+                            fila.codigo_interno,
+
+                        nombre:
+                            fila.nombre_equipo,
+
+                        marca:
+                            fila.marca,
+
+                        modelo:
+                            fila.modelo,
+
+                        serial:
+                            fila.serial
+
+                    },
+
+                    empleado: {
+
+                        id_empleado:
+                            fila.id_empleado,
+
+                        rut:
+                            fila.rut,
+
+                        nombres:
+                            fila.nombres,
+
+                        apellidos:
+                            fila.apellidos,
+
+                        correo:
+                            fila.correo
+
+                    },
+
+                    devolucion:
+                        fueDevuelto
+                            ? {
+
+                                id_devolucion:
+                                    fila.id_devolucion,
+
+                                fecha:
+                                    fila.fecha_devolucion,
+
+                                condicion:
+                                    fila.condicion_devolucion,
+
+                                observaciones:
+                                    fila.observaciones_devolucion
+
+                            }
+                            : null
+
+                };
+
+            });
+
+
+        // ====================================================
+        // RESPUESTA
+        // ====================================================
+
+        return res.json(historial);
+
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener historial:',
+            error
+        );
+
+
+        return res.status(500).json({
+            mensaje:
+                'Error interno al obtener el historial'
+        });
+
+    }
+
+});
+
+// ============================================================
+// ADMINISTRADORES
+// ============================================================
+
+// GET http://localhost:3000/api/administradores
+//
+// Obtiene la lista de administradores registrados.
+//
+// IMPORTANTE:
+// Nunca se devuelve password_hash.
+// Las contraseñas jamás deben enviarse al frontend.
+
+app.get('/api/administradores', verificarToken, async (req, res) => {
+
+    try {
+
+        // ====================================================
+        // CONSULTAR ADMINISTRADORES
+        // ====================================================
+
+        const resultado = await pool.query(`
+            SELECT
+                id_usuario,
+                nombre,
+                correo,
+                rol,
+                fecha_creacion,
+                estado
+            FROM usuarios
+            WHERE rol = 'ADMIN'
+            ORDER BY
+                estado DESC,
+                nombre ASC,
+                id_usuario ASC
+        `);
+
+
+        // ====================================================
+        // RESPUESTA
+        // ====================================================
+
+        return res.json(resultado.rows);
+
+
+    } catch (error) {
+
+        console.error(
+            'Error al obtener administradores:',
+            error
+        );
+
+
+        return res.status(500).json({
+            mensaje:
+                'Error interno al obtener los administradores'
+        });
+
+    }
+
+});
+
+// ============================================================
+// CREAR ADMINISTRADOR
+// ============================================================
+
+// POST http://localhost:3000/api/administradores
+//
+// Crea una nueva cuenta de administrador.
+//
+// Body esperado:
+//
+// {
+//     "nombre": "Bruce",
+//     "correo": "bruce@empresa.com",
+//     "password": "UnaContraseñaSegura123"
+// }
+//
+// La contraseña NUNCA se guarda directamente.
+// Primero se transforma en un hash utilizando bcrypt.
+
+app.post('/api/administradores', verificarToken, async (req, res) => {
+
+    try {
+
+        // ====================================================
+        // OBTENER DATOS
+        // ====================================================
+
+        let {
+            nombre,
+            correo,
+            password
+        } = req.body;
+
+
+        // ====================================================
+        // VALIDAR CAMPOS OBLIGATORIOS
+        // ====================================================
+
+        if (
+            !nombre ||
+            !correo ||
+            !password
+        ) {
+
+            return res.status(400).json({
+                mensaje:
+                    'Nombre, correo y contraseña son obligatorios'
+            });
+
+        }
+
+
+        // ====================================================
+        // LIMPIAR DATOS
+        // ====================================================
+
+        nombre = nombre.trim();
+
+        correo = correo
+            .trim()
+            .toLowerCase();
+
+
+        // ====================================================
+        // VALIDAR NOMBRE
+        // ====================================================
+
+        if (
+            nombre.length < 2 ||
+            nombre.length > 100
+        ) {
+
+            return res.status(400).json({
+                mensaje:
+                    'El nombre debe tener entre 2 y 100 caracteres'
+            });
+
+        }
+
+
+        // ====================================================
+        // VALIDAR CORREO
+        // ====================================================
+
+        const regexCorreo =
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+
+        if (!regexCorreo.test(correo)) {
+
+            return res.status(400).json({
+                mensaje:
+                    'El correo electrónico no es válido'
+            });
+
+        }
+
+
+        // ====================================================
+        // VALIDAR CONTRASEÑA
+        // ====================================================
+
+        // Para este proyecto exigiremos:
+        //
+        // - mínimo 8 caracteres
+        // - máximo 72 caracteres
+        //
+        // El límite de 72 también evita problemas con bcrypt.
+
+        if (
+            password.length < 8 ||
+            password.length > 72
+        ) {
+
+            return res.status(400).json({
+                mensaje:
+                    'La contraseña debe tener entre 8 y 72 caracteres'
+            });
+
+        }
+
+
+        // ====================================================
+        // COMPROBAR CORREO DUPLICADO
+        // ====================================================
+
+        const usuarioExistente =
+            await pool.query(
+                `
+                    SELECT id_usuario
+                    FROM usuarios
+                    WHERE LOWER(correo) = LOWER($1)
+                    LIMIT 1
+                `,
+                [correo]
+            );
+
+
+        if (usuarioExistente.rows.length > 0) {
+
+            return res.status(409).json({
+                mensaje:
+                    'Ya existe un usuario registrado con ese correo'
+            });
+
+        }
+
+
+        // ====================================================
+        // GENERAR HASH DE LA CONTRASEÑA
+        // ====================================================
+
+        // Nunca guardamos "password" directamente.
+        //
+        // bcrypt genera una versión protegida de la contraseña.
+        // El número 10 corresponde al costo del hash.
+
+        const passwordHash =
+            await bcrypt.hash(
+                password,
+                10
+            );
+
+
+        // ====================================================
+        // CREAR ADMINISTRADOR
+        // ====================================================
+
+        const resultado =
+            await pool.query(
+                `
+                    INSERT INTO usuarios (
+                        nombre,
+                        correo,
+                        password_hash,
+                        rol,
+                        estado
+                    )
+                    VALUES (
+                        $1,
+                        $2,
+                        $3,
+                        'ADMIN',
+                        true
+                    )
+                    RETURNING
+                        id_usuario,
+                        nombre,
+                        correo,
+                        rol,
+                        fecha_creacion,
+                        estado
+                `,
+                [
+                    nombre,
+                    correo,
+                    passwordHash
+                ]
+            );
+
+
+        // ====================================================
+        // RESPUESTA
+        // ====================================================
+
+        return res.status(201).json({
+
+            mensaje:
+                'Administrador creado correctamente',
+
+            administrador:
+                resultado.rows[0]
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            'Error al crear administrador:',
+            error
+        );
+
+
+        return res.status(500).json({
+            mensaje:
+                'Error interno al crear el administrador'
+        });
+
+    }
+
+});
+
+// ============================================================
+// ACTIVAR / DESACTIVAR ADMINISTRADOR
+// ============================================================
+
+// PATCH http://localhost:3000/api/administradores/:id/estado
+//
+// Permite activar o suspender una cuenta de administrador.
+//
+// Body:
+//
+// {
+//     "estado": false
+// }
+//
+// true  = cuenta activa
+// false = cuenta suspendida
+
+app.patch(
+    '/api/administradores/:id/estado',
+    verificarToken,
+    async (req, res) => {
+
+        try {
+
+            // ====================================================
+            // OBTENER DATOS
+            // ====================================================
+
+            const idAdministrador =
+                Number(req.params.id);
+
+            const { estado } = req.body;
+
+
+            // ====================================================
+            // VALIDAR ID
+            // ====================================================
+
+            if (
+                !Number.isInteger(idAdministrador) ||
+                idAdministrador <= 0
+            ) {
+
+                return res.status(400).json({
+                    mensaje:
+                        'El administrador seleccionado no es válido'
+                });
+
+            }
+
+
+            // ====================================================
+            // VALIDAR ESTADO
+            // ====================================================
+
+            if (typeof estado !== 'boolean') {
+
+                return res.status(400).json({
+                    mensaje:
+                        'El estado debe ser true o false'
+                });
+
+            }
+
+
+            // ====================================================
+            // BUSCAR ADMINISTRADOR
+            // ====================================================
+
+            const resultadoAdministrador =
+                await pool.query(
+                    `
+                        SELECT
+                            id_usuario,
+                            nombre,
+                            correo,
+                            rol,
+                            estado
+                        FROM usuarios
+                        WHERE id_usuario = $1
+                          AND rol = 'ADMIN'
+                        LIMIT 1
+                    `,
+                    [idAdministrador]
+                );
+
+
+            if (
+                resultadoAdministrador.rows.length === 0
+            ) {
+
+                return res.status(404).json({
+                    mensaje:
+                        'Administrador no encontrado'
+                });
+
+            }
+
+
+            const administrador =
+                resultadoAdministrador.rows[0];
+
+
+            // ====================================================
+            // IMPEDIR DESACTIVAR LA PROPIA CUENTA
+            // ====================================================
+
+            // verificarToken guarda los datos del JWT en req.usuario.
+            //
+            // Esta validación evita que un administrador suspenda
+            // accidentalmente la misma cuenta con la que inició sesión.
+
+            if (
+                estado === false &&
+                req.usuario &&
+                Number(req.usuario.id_usuario) ===
+                    idAdministrador
+            ) {
+
+                return res.status(400).json({
+                    mensaje:
+                        'No puedes desactivar tu propia cuenta'
+                });
+
+            }
+
+
+            // ====================================================
+            // COMPROBAR SI YA TIENE ESE ESTADO
+            // ====================================================
+
+            if (administrador.estado === estado) {
+
+                return res.status(400).json({
+                    mensaje:
+                        estado
+                            ? 'El administrador ya se encuentra activo'
+                            : 'El administrador ya se encuentra inactivo'
+                });
+
+            }
+
+
+            // ====================================================
+            // ACTUALIZAR ESTADO
+            // ====================================================
+
+            const resultado =
+                await pool.query(
+                    `
+                        UPDATE usuarios
+                        SET estado = $1
+                        WHERE id_usuario = $2
+                          AND rol = 'ADMIN'
+                        RETURNING
+                            id_usuario,
+                            nombre,
+                            correo,
+                            rol,
+                            fecha_creacion,
+                            estado
+                    `,
+                    [
+                        estado,
+                        idAdministrador
+                    ]
+                );
+
+
+            // ====================================================
+            // RESPUESTA
+            // ====================================================
+
+            return res.json({
+
+                mensaje:
+                    estado
+                        ? 'Administrador reactivado correctamente'
+                        : 'Administrador desactivado correctamente',
+
+                administrador:
+                    resultado.rows[0]
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                'Error al cambiar estado del administrador:',
+                error
+            );
+
+
+            return res.status(500).json({
+                mensaje:
+                    'Error interno al cambiar el estado del administrador'
+            });
+
+        }
+
+    }
+);
 // PUERTO
 
 // ======================================================

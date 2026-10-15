@@ -55,8 +55,29 @@ function obtenerUsuario() {
 // COMPONENTE MENÚ PRINCIPAL
 // ======================================================
 
-function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistrarEmpleado, onBuscarEmpleados, onAsignarEquipo, onRegistrarDevolucion }) {
+function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistrarEmpleado, onBuscarEmpleados, onAsignarEquipo, onRegistrarDevolucion, onNavigate }) {
   const usuario = obtenerUsuario()
+
+  // Las pantallas ya disponibles se identifican por su nombre, no por índices.
+  const accionesTarjetas = {
+    'Registrar equipo': onRegistrarEquipo,
+    'Buscar equipos': onBuscarEquipos,
+    'Registrar empleado': onRegistrarEmpleado,
+    'Buscar empleados': onBuscarEmpleados,
+    'Asignar equipo': onAsignarEquipo,
+    'Registrar devolución': onRegistrarDevolucion,
+  }
+
+  // Historial y Administradores usan el mismo flujo directo hacia App.
+  const rutasDisponibles = {
+    Historial: 'consultar-historial',
+    'Consultar historial': 'consultar-historial',
+    Administradores: 'administradores',
+  }
+
+  const navegar = (destino) => {
+    if (destino) onNavigate(destino)
+  }
 
   // Elimina la sesión local y avisa a App para volver inmediatamente al Login.
   const cerrarSesion = () => {
@@ -83,7 +104,7 @@ function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistr
         {/* Inicio aparece activo porque esta es la pantalla principal del sistema. */}
         <nav className="sidebar-nav" aria-label="Navegación principal">
           {opciones.map(([icono, texto], indice) => (
-            <button className={indice === 0 ? 'active' : ''} type="button" key={texto}>
+            <button className={indice === 0 ? 'active' : ''} type="button" key={texto} onClick={() => navegar(rutasDisponibles[texto])}>
               <Icono tipo={icono} />
               <span>{texto}</span>
               {indice !== 0 && <span className="nav-arrow">›</span>}
@@ -114,7 +135,7 @@ function MenuPrincipal({ onLogout, onRegistrarEquipo, onBuscarEquipos, onRegistr
               className="shortcut-card"
               type="button"
               key={titulo}
-              onClick={indice === 0 ? onRegistrarEquipo : indice === 1 ? onBuscarEquipos : indice === 2 ? onRegistrarEmpleado : indice === 3 ? onBuscarEmpleados : indice === 4 ? onAsignarEquipo : indice === 5 ? onRegistrarDevolucion : undefined}
+              onClick={rutasDisponibles[titulo] ? () => navegar(rutasDisponibles[titulo]) : accionesTarjetas[titulo]}
             >
               <span className="shortcut-icon"><Icono tipo={icono} /></span>
               <span className="shortcut-title">{titulo}<span aria-hidden="true">›</span></span>

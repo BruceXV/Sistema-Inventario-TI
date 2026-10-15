@@ -1320,3 +1320,128 @@ button {
     grid-column: auto;
   }
 }
+.history-table {
+  min-width: 1120px;
+}
+
+/* ======================================================
+   ADMINISTRADORES
+   ====================================================== */
+
+.administrators-page {
+  padding-top: 38px;
+  padding-bottom: 38px;
+}
+
+.administrators-content {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.administrator-form-card {
+  width: 100%;
+  margin: 0;
+}
+
+.equipment-form-header h2,
+.administrator-table-header h2 {
+  margin: 0;
+  color: #0b1e40;
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.administrator-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.administrator-password-control {
+  position: relative;
+}
+
+.administrator-password-control input {
+  padding-right: 50px;
+}
+
+.administrator-password-control button {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #71809a;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.administrator-password-control button:hover,
+.administrator-password-control button:focus-visible {
+  color: #1260df;
+  background: #edf4ff;
+}
+
+.administrator-password-control svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.administrator-table-card {
+  margin-top: 24px;
+}
+
+.administrator-table-header {
+  padding: 22px 24px;
+  border-bottom: 1px solid #e5ebf3;
+}
+
+.administrator-state-message {
+  margin: 18px 24px 0;
+}
+
+.administrator-table {
+  min-width: 900px;
+}
+
+.administrator-state-button {
+  min-width: 96px;
+  padding: 8px 13px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.administrator-state-button--activate {
+  color: #1260df;
+  background: #edf4ff;
+}
+
+.administrator-state-button--deactivate {
+  color: #9f2533;
+  background: #fff0f2;
+}
+
+.administrator-state-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (max-width: 760px) {
+  .administrators-page {
+    padding: 22px 16px;
+  }
+
+  .administrator-form {
+    grid-template-columns: 1fr;
+  }
+}
