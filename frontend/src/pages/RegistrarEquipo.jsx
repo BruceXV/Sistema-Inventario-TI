@@ -479,10 +479,11 @@ function RegistrarEquipo({ onInicio, onNavigate, onLogout }) {
     <div className="dashboard">
       <Sidebar seccionActiva="Equipos" usuario={usuario} onInicio={onInicio} onNavigate={onNavigate} onLogout={cerrarSesion} />
 
-      <main className="dashboard-main equipment-page">
+      <main className="dashboard-main equipment-page equipment-registration-page">
         <section className="equipment-form-card equipment-form-card--progressive" aria-labelledby="equipment-form-title">
           <header className="equipment-form-header">
             <h1 id="equipment-form-title">Registrar equipo</h1>
+            <p>Agrega un nuevo activo tecnológico al inventario.</p>
           </header>
 
           {/* noValidate permite mostrar mensajes propios y mantener una experiencia consistente. */}

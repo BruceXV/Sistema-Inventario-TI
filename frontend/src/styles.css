@@ -1844,6 +1844,223 @@ button {
   }
 }
 
+/* ======================================================
+   REGISTRAR EQUIPO — RENOVACIÓN VISUAL
+   Las reglas están aisladas para no alterar otros formularios.
+   ====================================================== */
+
+.equipment-registration-page {
+  padding: 32px clamp(22px, 3vw, 44px);
+  background: #f5f7fb;
+}
+
+.equipment-registration-page .equipment-form-card--progressive {
+  width: min(100%, 1120px);
+  padding: 0;
+  overflow: visible;
+  background: #fff;
+  border: 1px solid #dfe6f0;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(20, 47, 84, 0.065);
+}
+
+.equipment-registration-page .equipment-form-header {
+  padding: 25px 30px 20px;
+  border-bottom-color: #e7ecf3;
+}
+
+.equipment-registration-page .equipment-form-header h1 {
+  color: #0a1c3b;
+  font-size: clamp(1.55rem, 2vw, 1.85rem);
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+
+.equipment-registration-page .equipment-form-header p {
+  margin: 7px 0 0;
+  color: #7a899f;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.equipment-registration-page .equipment-form {
+  margin-top: 0;
+  padding: 26px 30px 30px;
+  gap: 19px 22px;
+}
+
+.equipment-registration-page .equipment-initial-instruction {
+  color: #405675;
+  font-size: 0.9rem;
+}
+
+.equipment-registration-page .equipment-field label {
+  margin-bottom: 7px;
+  color: #172b4d;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.equipment-registration-page .equipment-field input,
+.equipment-registration-page .equipment-field select,
+.equipment-registration-page .equipment-field textarea,
+.equipment-registration-page .equipment-type-select-trigger {
+  color: #102442;
+  border-color: #d4deeb;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(22, 48, 82, 0.02);
+}
+
+.equipment-registration-page .equipment-field input,
+.equipment-registration-page .equipment-field select,
+.equipment-registration-page .equipment-type-select-trigger {
+  height: 46px;
+}
+
+.equipment-registration-page .equipment-field input::placeholder,
+.equipment-registration-page .equipment-field textarea::placeholder {
+  color: #9aa8bb;
+}
+
+.equipment-registration-page .equipment-field textarea {
+  min-height: 108px;
+  padding: 12px 14px;
+}
+
+.equipment-registration-page .equipment-field input:hover,
+.equipment-registration-page .equipment-field select:hover,
+.equipment-registration-page .equipment-field textarea:hover,
+.equipment-registration-page .equipment-type-select-trigger:hover {
+  border-color: #b8c7db;
+}
+
+.equipment-registration-page .equipment-field input:focus,
+.equipment-registration-page .equipment-field select:focus,
+.equipment-registration-page .equipment-field textarea:focus,
+.equipment-registration-page .equipment-type-select-trigger:focus-visible,
+.equipment-registration-page .equipment-type-select-trigger[aria-expanded="true"] {
+  border-color: #2b73df;
+  box-shadow: 0 0 0 3px rgba(43, 115, 223, 0.11);
+}
+
+.equipment-registration-page .equipment-type-select-menu {
+  inset: calc(100% + 7px) 0 auto;
+  padding: 5px;
+  border-color: #d5dfec;
+  border-radius: 9px;
+  box-shadow: 0 16px 36px rgba(19, 46, 82, 0.16);
+}
+
+.equipment-registration-page .equipment-type-select-menu button {
+  border-radius: 6px;
+  font-size: 0.88rem;
+}
+
+.equipment-registration-page .equipment-type-help {
+  margin-top: 8px;
+  color: #8290a5;
+  font-size: 0.75rem;
+}
+
+.equipment-registration-page .field-error {
+  margin-top: 5px;
+  font-size: 0.75rem;
+}
+
+.equipment-registration-page .character-counter {
+  color: #8795a9;
+  font-size: 0.72rem;
+}
+
+.equipment-registration-page .equipment-actions {
+  margin-top: 2px;
+  padding-top: 20px;
+  border-top: 1px solid #e8edf4;
+}
+
+.equipment-registration-page .equipment-actions button {
+  min-width: 142px;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.equipment-registration-page .secondary-button {
+  color: #314866;
+  border-color: #cdd8e6;
+}
+
+.equipment-registration-page .primary-button {
+  background: #1967df;
+  box-shadow: 0 7px 15px rgba(25, 103, 223, 0.18);
+}
+
+@media (min-width: 1600px) {
+  .equipment-registration-page .equipment-form-card--progressive {
+    width: min(100%, 1180px);
+  }
+
+  .equipment-registration-page {
+    padding-top: 42px;
+    padding-bottom: 42px;
+  }
+}
+
+@media (max-height: 800px) and (min-width: 761px) {
+  .equipment-registration-page {
+    padding-top: 22px;
+    padding-bottom: 22px;
+  }
+
+  .equipment-registration-page .equipment-form-header {
+    padding-top: 20px;
+    padding-bottom: 16px;
+  }
+
+  .equipment-registration-page .equipment-form {
+    padding-top: 21px;
+    padding-bottom: 24px;
+    gap: 16px 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  .equipment-registration-page {
+    padding: 22px 16px;
+  }
+
+  .equipment-registration-page .equipment-form-header {
+    padding: 23px 20px 18px;
+  }
+
+  .equipment-registration-page .equipment-form {
+    padding: 22px 20px 24px;
+    gap: 17px;
+  }
+
+  .equipment-registration-page .equipment-actions {
+    padding-top: 18px;
+  }
+}
+
+@media (max-width: 430px) {
+  .equipment-registration-page {
+    padding: 14px 12px;
+  }
+
+  .equipment-registration-page .equipment-form-card--progressive {
+    border-radius: 12px;
+  }
+
+  .equipment-registration-page .equipment-form-header {
+    padding: 20px 16px 16px;
+  }
+
+  .equipment-registration-page .equipment-form {
+    padding: 20px 16px 22px;
+  }
+}
+
 .search-equipment-page {
   padding-top: 38px;
   padding-bottom: 38px;
@@ -2312,5 +2529,267 @@ button {
 
   .administrator-form {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ======================================================
+   NAVEGACIÓN RESPONSIVE DE PANTALLAS INTERNAS
+   ====================================================== */
+
+.mobile-sidebar-bar,
+.sidebar-backdrop,
+.sidebar-close-button {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  html,
+  body,
+  #root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .dashboard {
+    width: 100%;
+    height: 100dvh;
+    padding-top: 60px;
+    display: block;
+    overflow: hidden;
+  }
+
+  .mobile-sidebar-bar {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 60;
+    height: 60px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+    background: #062b57;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 14px rgba(2, 24, 52, 0.16);
+  }
+
+  .mobile-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mobile-sidebar-brand > span {
+    width: 31px;
+    height: 31px;
+    padding: 5px;
+    display: block;
+    color: #2780ff;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+  }
+
+  .mobile-sidebar-brand svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .mobile-sidebar-brand strong {
+    font-size: 1rem;
+  }
+
+  .mobile-menu-button {
+    width: 40px;
+    height: 40px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 9px;
+    cursor: pointer;
+  }
+
+  .mobile-menu-button span {
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+  }
+
+  .mobile-menu-button:hover,
+  .mobile-menu-button:focus-visible {
+    background: rgba(255, 255, 255, 0.16);
+    outline: 2px solid rgba(255, 255, 255, 0.45);
+    outline-offset: 2px;
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: block;
+    background: rgba(2, 18, 40, 0.55);
+    border: 0;
+    cursor: pointer;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 80;
+    width: min(86vw, 300px);
+    height: 100dvh;
+    min-height: 0;
+    padding: 24px 15px 18px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform: translateX(-105%);
+    transition: transform 220ms ease;
+    box-shadow: 14px 0 35px rgba(1, 18, 40, 0.28);
+  }
+
+  .sidebar.sidebar--mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-close-button {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 1;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    color: #dceaff;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    font-size: 1.7rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .sidebar-close-button:hover,
+  .sidebar-close-button:focus-visible {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    outline: 2px solid rgba(255, 255, 255, 0.4);
+    outline-offset: 2px;
+  }
+
+  .sidebar-brand {
+    padding-right: 44px;
+  }
+
+  .sidebar-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-account {
+    margin-top: auto;
+  }
+
+  .dashboard-main {
+    width: 100%;
+    max-width: 100%;
+    height: calc(100dvh - 60px);
+    min-height: 0;
+    margin-left: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
+
+/* Escritorio compacto: proporciones optimizadas para ventanas de notebook. */
+@media (min-width: 901px) and (max-width: 1599px) {
+  .sidebar {
+    width: 260px;
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
+  .sidebar-brand {
+    padding-bottom: 22px;
+    gap: 12px;
+  }
+
+  .sidebar-logo {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .sidebar-brand strong {
+    font-size: 1.2rem;
+  }
+
+  .sidebar-brand p {
+    margin-top: 5px;
+    font-size: 0.7rem;
+  }
+
+  .dashboard-main {
+    width: calc(100% - 260px);
+    margin-left: 260px;
+  }
+
+  .equipment-registration-page {
+    padding: 20px 26px;
+  }
+
+  .equipment-registration-page .equipment-form-card--progressive {
+    width: min(100%, 1040px);
+  }
+
+  .equipment-registration-page .equipment-form-header {
+    padding: 18px 24px 15px;
+  }
+
+  .equipment-registration-page .equipment-form-header h1 {
+    font-size: 1.45rem;
+  }
+
+  .equipment-registration-page .equipment-form-header p {
+    margin-top: 5px;
+    font-size: 0.74rem;
+  }
+
+  .equipment-registration-page .equipment-form {
+    padding: 18px 24px 22px;
+    gap: 14px 18px;
+  }
+
+  .equipment-registration-page .equipment-initial-instruction {
+    font-size: 0.85rem;
+  }
+
+  .equipment-registration-page .equipment-field label {
+    margin-bottom: 5px;
+    font-size: 0.76rem;
+  }
+
+  .equipment-registration-page .equipment-field input,
+  .equipment-registration-page .equipment-field select,
+  .equipment-registration-page .equipment-type-select-trigger {
+    height: 42px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .equipment-registration-page .equipment-field textarea {
+    min-height: 92px;
+    padding: 10px 12px;
+  }
+
+  .equipment-registration-page .equipment-actions {
+    padding-top: 14px;
   }
 }

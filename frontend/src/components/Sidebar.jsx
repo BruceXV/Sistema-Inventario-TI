@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // Mantiene en un solo lugar los iconos y destinos del menú lateral.
 const Icono = ({ tipo }) => {
@@ -27,13 +27,80 @@ function Sidebar({ seccionActiva, usuario, onInicio, onNavigate, onLogout }) {
   const [submenuAbierto, setSubmenuAbierto] = useState(
     seccionActiva === 'Equipos' || seccionActiva === 'Empleados' ? seccionActiva : '',
   )
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false)
+
+  // Impide desplazar el contenido de fondo mientras el panel móvil está abierto.
+  useEffect(() => {
+    if (!menuMovilAbierto) return undefined
+
+    const overflowAnterior = document.body.style.overflow
+    const cerrarConEscape = (event) => {
+      if (event.key === 'Escape') setMenuMovilAbierto(false)
+    }
+    const cerrarAlAmpliar = () => {
+      if (window.innerWidth > 760) setMenuMovilAbierto(false)
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', cerrarConEscape)
+    window.addEventListener('resize', cerrarAlAmpliar)
+
+    return () => {
+      document.body.style.overflow = overflowAnterior
+      document.removeEventListener('keydown', cerrarConEscape)
+      window.removeEventListener('resize', cerrarAlAmpliar)
+    }
+  }, [menuMovilAbierto])
 
   const alternarSubmenu = (seccion) => {
     setSubmenuAbierto((actual) => actual === seccion ? '' : seccion)
   }
 
+  const irAInicio = () => {
+    setMenuMovilAbierto(false)
+    onInicio()
+  }
+
+  const navegar = (pantalla) => {
+    setMenuMovilAbierto(false)
+    onNavigate(pantalla)
+  }
+
+  const cerrarSesion = () => {
+    setMenuMovilAbierto(false)
+    onLogout()
+  }
+
   return (
-    <aside className="sidebar">
+    <>
+      <header className="mobile-sidebar-bar">
+        <div className="mobile-sidebar-brand">
+          <span><Icono tipo="equipos" /></span>
+          <strong>Inventario TI</strong>
+        </div>
+        <button
+          className="mobile-menu-button"
+          type="button"
+          aria-label="Abrir menú de navegación"
+          aria-controls="sidebar-navigation"
+          aria-expanded={menuMovilAbierto}
+          onClick={() => setMenuMovilAbierto(true)}
+        >
+          <span /><span /><span />
+        </button>
+      </header>
+
+      {menuMovilAbierto && (
+        <button
+          className="sidebar-backdrop"
+          type="button"
+          aria-label="Cerrar menú de navegación"
+          onClick={() => setMenuMovilAbierto(false)}
+        />
+      )}
+
+    <aside id="sidebar-navigation" className={`sidebar ${menuMovilAbierto ? 'sidebar--mobile-open' : ''}`}>
+      <button className="sidebar-close-button" type="button" aria-label="Cerrar menú de navegación" onClick={() => setMenuMovilAbierto(false)}>×</button>
       <div className="sidebar-brand">
         <div className="sidebar-logo"><Icono tipo="equipos" /></div>
         <div>
@@ -43,7 +110,7 @@ function Sidebar({ seccionActiva, usuario, onInicio, onNavigate, onLogout }) {
       </div>
 
       <nav className="sidebar-nav" aria-label="Navegación principal">
-        <button className={seccionActiva === 'Inicio' ? 'active' : ''} type="button" onClick={onInicio}>
+        <button className={seccionActiva === 'Inicio' ? 'active' : ''} type="button" onClick={irAInicio}>
           <Icono tipo="inicio" /><span>Menú Principal</span>
         </button>
 
@@ -53,8 +120,8 @@ function Sidebar({ seccionActiva, usuario, onInicio, onNavigate, onLogout }) {
           </button>
           {submenuAbierto === 'Equipos' && (
             <div className="sidebar-submenu">
-              <button type="button" onClick={() => onNavigate('registrar-equipo')}>Registrar equipo</button>
-              <button type="button" onClick={() => onNavigate('buscar-equipos')}>Buscar equipos</button>
+              <button type="button" onClick={() => navegar('registrar-equipo')}>Registrar equipo</button>
+              <button type="button" onClick={() => navegar('buscar-equipos')}>Buscar equipos</button>
             </div>
           )}
         </div>
@@ -65,14 +132,14 @@ function Sidebar({ seccionActiva, usuario, onInicio, onNavigate, onLogout }) {
           </button>
           {submenuAbierto === 'Empleados' && (
             <div className="sidebar-submenu">
-              <button type="button" onClick={() => onNavigate('registrar-empleado')}>Registrar empleado</button>
-              <button type="button" onClick={() => onNavigate('buscar-empleados')}>Buscar empleados</button>
+              <button type="button" onClick={() => navegar('registrar-empleado')}>Registrar empleado</button>
+              <button type="button" onClick={() => navegar('buscar-empleados')}>Buscar empleados</button>
             </div>
           )}
         </div>
 
         {opcionesDirectas.map(([icono, texto, pantalla]) => (
-          <button className={seccionActiva === texto ? 'active' : ''} type="button" key={pantalla} onClick={() => onNavigate(pantalla)}>
+          <button className={seccionActiva === texto ? 'active' : ''} type="button" key={pantalla} onClick={() => navegar(pantalla)}>
             <Icono tipo={icono} /><span>{texto}</span><span className="nav-arrow">›</span>
           </button>
         ))}
@@ -83,9 +150,10 @@ function Sidebar({ seccionActiva, usuario, onInicio, onNavigate, onLogout }) {
           <span className="account-avatar"><Icono tipo="administradores" /></span>
           <div><strong>{usuario.nombre || 'Administrador'}</strong><small>{usuario.correo || ''}</small></div>
         </div>
-        <button className="logout-button" type="button" onClick={onLogout}><Icono tipo="salir" />Cerrar sesión</button>
+        <button className="logout-button" type="button" onClick={cerrarSesion}><Icono tipo="salir" />Cerrar sesión</button>
       </div>
     </aside>
+    </>
   )
 }
 
