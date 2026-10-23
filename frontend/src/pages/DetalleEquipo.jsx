@@ -61,6 +61,16 @@ function formatearFecha(valor, incluirHora = false) {
     : { dateStyle: 'long' }).format(fecha)
 }
 
+// Reutiliza la identidad visual de estados usada en Buscar equipos.
+function obtenerClaseEstado(estado) {
+  const nombre = String(estado || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  if (nombre === 'disponible') return 'disponible'
+  if (nombre === 'asignado') return 'asignado'
+  if (nombre === 'en reparacion') return 'reparacion'
+  if (nombre === 'dado de baja') return 'baja'
+  return 'neutral'
+}
+
 // ======================================================
 // COMPONENTE DETALLE EQUIPO
 // ======================================================
@@ -156,12 +166,18 @@ function DetalleEquipo({ idEquipo, onInicio, onNavigate, onVolver, onLogout }) {
     <div className="dashboard">
       <Sidebar seccionActiva="Equipos" usuario={usuario} onInicio={onInicio} onNavigate={onNavigate} onLogout={cerrarSesion} />
 
-      <main className="dashboard-main detail-equipment-page">
-        <section className="detail-equipment-card" aria-labelledby="detail-equipment-title">
+      <main className="dashboard-main detail-equipment-page equipment-detail-page">
+        <div className="equipment-detail-content">
+          <header className="equipment-detail-page-header">
+            <h1 id="detail-equipment-title">Detalle del equipo</h1>
+            <p>Consulta la información completa del activo seleccionado.</p>
+          </header>
+
+        <section className="detail-equipment-card equipment-detail-card" aria-labelledby="detail-equipment-title">
           <header className="detail-equipment-header">
-            <div>
-              <h1 id="detail-equipment-title">Detalle del equipo</h1>
-              {equipo && <p>{equipo.codigo_interno}</p>}
+            <div className="equipment-detail-identity">
+              <h2>{equipo?.codigo_interno || 'Información del equipo'}</h2>
+              <p>Información técnica y administrativa del activo.</p>
             </div>
             <button className="secondary-button detail-back-button" type="button" onClick={onVolver}>
               <Icono tipo="volver" />
@@ -176,12 +192,17 @@ function DetalleEquipo({ idEquipo, onInicio, onNavigate, onVolver, onLogout }) {
               {campos.map(([etiqueta, valor]) => (
                 <div className={etiqueta === 'Observaciones' ? 'detail-equipment-field detail-equipment-field--full' : 'detail-equipment-field'} key={etiqueta}>
                   <dt>{etiqueta}</dt>
-                  <dd>{valor}</dd>
+                  <dd>
+                    {etiqueta === 'Estado'
+                      ? <span className={`equipment-status equipment-status--${obtenerClaseEstado(valor)}`}>{valor}</span>
+                      : valor}
+                  </dd>
                 </div>
               ))}
             </dl>
           )}
         </section>
+        </div>
       </main>
     </div>
   )

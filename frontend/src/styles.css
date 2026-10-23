@@ -2280,6 +2280,488 @@ button {
   }
 }
 
+/* ======================================================
+   BUSCAR EQUIPOS — RENOVACIÓN VISUAL
+   ====================================================== */
+
+.equipment-search-page {
+  padding: 32px clamp(22px, 3vw, 42px);
+  overflow-x: hidden;
+  background: #f5f7fb;
+}
+
+.equipment-search-page .search-equipment-content {
+  width: min(100%, 1250px);
+}
+
+.equipment-search-page .search-equipment-header {
+  margin-bottom: 22px;
+}
+
+.equipment-search-page .search-equipment-header h1 {
+  margin: 0;
+  color: #0a1c3b;
+  font-size: clamp(1.6rem, 2vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+.equipment-search-page .search-equipment-header p {
+  margin: 7px 0 0;
+  color: #7b8aa0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.equipment-search-page .equipment-search-filter-card,
+.equipment-search-page .equipment-search-table-card {
+  border-color: #dfe6f0;
+  border-radius: 13px;
+  box-shadow: 0 8px 24px rgba(20, 47, 84, 0.05);
+}
+
+.equipment-search-page .equipment-search-filter-card {
+  padding: 20px;
+}
+
+.equipment-search-page .equipment-filters {
+  gap: 15px 18px;
+}
+
+.equipment-search-page .search-filter-field label {
+  margin-bottom: 6px;
+  color: #203653;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.equipment-search-page .search-filter-field input,
+.equipment-search-page .search-filter-field select {
+  height: 44px;
+  color: #142943;
+  border-color: #d4deeb;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.equipment-search-page .search-filter-field input::placeholder {
+  color: #98a6ba;
+}
+
+.equipment-search-page .search-filter-field input:hover,
+.equipment-search-page .search-filter-field select:hover {
+  border-color: #b9c8dc;
+}
+
+.equipment-search-page .search-filter-field input:focus,
+.equipment-search-page .search-filter-field select:focus {
+  border-color: #2b73df;
+  box-shadow: 0 0 0 3px rgba(43, 115, 223, 0.11);
+}
+
+.equipment-search-page .search-input-control svg {
+  width: 18px;
+  height: 18px;
+  stroke: #8190a6;
+}
+
+.equipment-search-page .search-input-control input {
+  padding-left: 41px;
+}
+
+.equipment-search-page .equipment-filter-actions {
+  gap: 10px;
+}
+
+.equipment-search-page .equipment-filter-actions button {
+  min-width: 132px;
+  height: 42px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.equipment-search-page .filter-load-error {
+  margin-top: 14px;
+  font-size: 0.8rem;
+}
+
+.equipment-search-initial-state {
+  min-height: 220px;
+  margin-top: 18px;
+  padding: 32px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #60738e;
+  background: #fff;
+  border: 1px solid #dfe6f0;
+  border-radius: 13px;
+  box-shadow: 0 8px 24px rgba(20, 47, 84, 0.04);
+  text-align: center;
+}
+
+.equipment-search-initial-icon {
+  width: 48px;
+  height: 48px;
+  padding: 12px;
+  display: grid;
+  place-items: center;
+  color: #2770dd;
+  background: #edf4ff;
+  border-radius: 12px;
+}
+
+.equipment-search-initial-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.equipment-search-initial-state h2 {
+  margin: 17px 0 0;
+  color: #19314f;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.equipment-search-initial-state p {
+  margin: 7px 0 0;
+  color: #7e8da2;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.equipment-search-page .equipment-search-table-card {
+  margin-top: 18px;
+}
+
+.equipment-search-table-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid #e6ebf2;
+}
+
+.equipment-search-table-header h2 {
+  margin: 0;
+  color: #142944;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.equipment-search-page .equipment-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.equipment-search-page .equipment-search-table {
+  min-width: 930px;
+}
+
+.equipment-search-page .equipment-search-table th,
+.equipment-search-page .equipment-search-table td {
+  padding: 14px 16px;
+}
+
+.equipment-search-page .equipment-search-table th {
+  color: #65758d;
+  background: #f7f9fc;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.equipment-search-page .equipment-search-table td {
+  color: #3e5575;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.equipment-search-page .equipment-search-table tbody tr {
+  transition: background 150ms ease;
+}
+
+.equipment-search-page .equipment-search-table tbody tr:hover {
+  background: #f9fbfe;
+}
+
+.equipment-status {
+  width: max-content;
+  max-width: 150px;
+  padding: 5px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.equipment-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.equipment-status--disponible {
+  color: #18734b;
+  background: #e8f7f0;
+}
+
+.equipment-status--asignado {
+  color: #1c64c7;
+  background: #eaf2ff;
+}
+
+.equipment-status--reparacion {
+  color: #9a5b08;
+  background: #fff3dd;
+}
+
+.equipment-status--baja {
+  color: #a13c49;
+  background: #fdecef;
+}
+
+.equipment-status--neutral {
+  color: #596a80;
+  background: #eef2f6;
+}
+
+.equipment-search-page .table-detail-button {
+  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  font-size: 0.72rem;
+}
+
+.equipment-search-page .table-detail-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.equipment-pagination {
+  min-height: 68px;
+  padding: 13px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: #66778f;
+  background: #fff;
+  border-top: 1px solid #e6ebf2;
+  font-size: 0.74rem;
+}
+
+.equipment-pagination-summary,
+.equipment-pagination-summary label,
+.equipment-pagination-controls {
+  display: flex;
+  align-items: center;
+}
+
+.equipment-pagination-summary {
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.equipment-pagination-summary label {
+  gap: 7px;
+  color: #718097;
+}
+
+.equipment-pagination-summary select {
+  height: 34px;
+  padding: 0 28px 0 10px;
+  color: #263d5b;
+  background: #fff;
+  border: 1px solid #d3deeb;
+  border-radius: 7px;
+  outline: none;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.equipment-pagination-summary select:focus {
+  border-color: #2b73df;
+  box-shadow: 0 0 0 3px rgba(43, 115, 223, 0.1);
+}
+
+.equipment-pagination-controls {
+  gap: 9px;
+  white-space: nowrap;
+}
+
+.equipment-pagination-controls span {
+  min-width: 100px;
+  color: #405675;
+  font-weight: 650;
+  text-align: center;
+}
+
+.equipment-pagination-controls button {
+  min-width: 82px;
+  height: 35px;
+  padding: 0 12px;
+  color: #1767df;
+  background: #fff;
+  border: 1px solid #cdd9e8;
+  border-radius: 7px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+}
+
+.equipment-pagination-controls button:hover:not(:disabled),
+.equipment-pagination-controls button:focus-visible:not(:disabled) {
+  color: #fff;
+  background: #1767df;
+  border-color: #1767df;
+  outline: none;
+}
+
+.equipment-pagination-controls button:disabled {
+  color: #9aa7b8;
+  background: #f3f6fa;
+  border-color: #e0e6ee;
+  cursor: not-allowed;
+}
+
+@media (min-width: 1600px) {
+  .equipment-search-page {
+    padding-top: 42px;
+    padding-bottom: 42px;
+  }
+
+  .equipment-search-page .search-equipment-content {
+    width: min(100%, 1340px);
+  }
+
+  .equipment-search-page .equipment-search-table th,
+  .equipment-search-page .equipment-search-table td {
+    padding: 16px 18px;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1599px) {
+  .equipment-search-page {
+    padding: 22px 26px;
+  }
+
+  .equipment-search-page .search-equipment-header {
+    margin-bottom: 17px;
+  }
+
+  .equipment-search-page .search-equipment-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .equipment-search-page .equipment-search-filter-card {
+    padding: 17px 18px;
+  }
+
+  .equipment-search-page .equipment-filters {
+    gap: 13px 15px;
+  }
+
+  .equipment-search-page .search-filter-field input,
+  .equipment-search-page .search-filter-field select {
+    height: 42px;
+  }
+
+  .equipment-search-page .equipment-search-table th,
+  .equipment-search-page .equipment-search-table td {
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 1050px) {
+  .equipment-search-page .equipment-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .equipment-search-page {
+    padding: 20px 12px;
+  }
+
+  .equipment-search-page .search-equipment-header {
+    margin-bottom: 18px;
+  }
+
+  .equipment-search-page .search-equipment-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .equipment-search-page .equipment-search-filter-card {
+    padding: 16px;
+  }
+
+  .equipment-search-page .equipment-filters {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .equipment-search-page .equipment-search-table-card {
+    margin-top: 16px;
+  }
+
+  .equipment-search-initial-state {
+    min-height: 190px;
+    margin-top: 16px;
+    padding: 28px 16px;
+  }
+
+  .equipment-search-table-header {
+    padding: 16px;
+  }
+
+  .equipment-search-page .equipment-search-table {
+    min-width: 900px;
+  }
+
+  .equipment-pagination {
+    padding: 14px 16px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .equipment-pagination-summary {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .equipment-pagination-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .equipment-pagination-controls button {
+    min-width: 78px;
+  }
+}
+
 .detail-equipment-page {
   padding-top: 38px;
   padding-bottom: 38px;
@@ -2403,6 +2885,210 @@ button {
   }
 
   .detail-equipment-field--full {
+    grid-column: auto;
+  }
+}
+
+/* ======================================================
+   DETALLE DEL EQUIPO — RENOVACIÓN VISUAL
+   ====================================================== */
+
+.equipment-detail-page {
+  padding: 32px clamp(22px, 3vw, 42px);
+  overflow-x: hidden;
+  background: #f5f7fb;
+}
+
+.equipment-detail-content {
+  width: min(100%, 1250px);
+  margin: 0 auto;
+}
+
+.equipment-detail-page-header {
+  margin-bottom: 22px;
+}
+
+.equipment-detail-page-header h1 {
+  margin: 0;
+  color: #0a1c3b;
+  font-size: clamp(1.6rem, 2vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.equipment-detail-page-header p {
+  margin: 7px 0 0;
+  color: #7b8aa0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.equipment-detail-page .equipment-detail-card {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-color: #dfe6f0;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(20, 47, 84, 0.05);
+}
+
+.equipment-detail-page .detail-equipment-header {
+  padding: 22px 24px;
+  border-bottom-color: #e6ebf2;
+}
+
+.equipment-detail-identity h2 {
+  margin: 0;
+  color: #112945;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.equipment-detail-page .equipment-detail-identity p {
+  margin: 6px 0 0;
+  color: #8491a4;
+  font-size: 0.72rem;
+}
+
+.equipment-detail-page .detail-back-button {
+  height: 40px;
+  padding: 0 15px;
+  color: #2e4766;
+  border-color: #ccd8e7;
+  border-radius: 8px;
+  font-size: 0.78rem;
+}
+
+.equipment-detail-page .detail-back-button:hover,
+.equipment-detail-page .detail-back-button:focus-visible {
+  color: #1767df;
+  background: #f1f6fd;
+  border-color: #abc2df;
+  outline: none;
+}
+
+.equipment-detail-page .detail-equipment-status {
+  min-height: 310px;
+  padding: 24px;
+}
+
+.equipment-detail-page .detail-equipment-grid {
+  margin: 0;
+  padding: 22px 24px 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.equipment-detail-page .detail-equipment-field {
+  min-height: 76px;
+  padding: 14px 15px;
+  background: #f8fafc;
+  border-color: #e0e7f0;
+  border-radius: 9px;
+}
+
+.equipment-detail-page .detail-equipment-field dt {
+  color: #64758d;
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.equipment-detail-page .detail-equipment-field dd {
+  margin-top: 8px;
+  color: #112744;
+  font-size: 0.84rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.equipment-detail-page .detail-equipment-field--full {
+  min-height: 82px;
+}
+
+.equipment-detail-page .detail-equipment-field .equipment-status {
+  font-weight: 700;
+}
+
+@media (min-width: 1600px) {
+  .equipment-detail-page {
+    padding-top: 42px;
+    padding-bottom: 42px;
+  }
+
+  .equipment-detail-content {
+    width: min(100%, 1340px);
+  }
+
+  .equipment-detail-page .detail-equipment-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px 18px;
+    padding: 24px 26px 26px;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1599px) {
+  .equipment-detail-page {
+    padding: 22px 26px;
+  }
+
+  .equipment-detail-page-header {
+    margin-bottom: 17px;
+  }
+
+  .equipment-detail-page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .equipment-detail-page .detail-equipment-header {
+    padding: 18px 20px;
+  }
+
+  .equipment-detail-page .detail-equipment-grid {
+    padding: 18px 20px 20px;
+    gap: 12px 14px;
+  }
+
+  .equipment-detail-page .detail-equipment-field {
+    min-height: 70px;
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  .equipment-detail-page {
+    padding: 20px 12px;
+  }
+
+  .equipment-detail-page-header {
+    margin-bottom: 18px;
+  }
+
+  .equipment-detail-page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .equipment-detail-page .detail-equipment-header {
+    padding: 18px 16px;
+    gap: 16px;
+  }
+
+  .equipment-detail-page .detail-back-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .equipment-detail-page .detail-equipment-grid {
+    padding: 16px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .equipment-detail-page .detail-equipment-field--full {
     grid-column: auto;
   }
 }
